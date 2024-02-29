@@ -1,0 +1,3 @@
+[submodule "lib/arc"]
+	path = lib/arc
+	url = git@gitlab.com:Archeus_00/arc.git
