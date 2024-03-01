@@ -1,5 +1,7 @@
+#include <curses.h>
 #include <libssh/libssh.h>
 #include "arc/ssh/ssh.h"
+#include "arc/ncurses/ncurses.h"
 
 // static ARC_Ssh *ssh;
 
@@ -37,53 +39,55 @@ void create_box(WIN *win, bool flag);
 
 int main(int argc, char *argv[]){
     // ARC_Ssh_Create(&ssh);
+    ARC_NCurses *mainNCurses;
+    ARC_NCurses_Create(&mainNCurses, NULL);
+    ARC_NCurses_SetBorder(mainNCurses, ARC_NCURSES_BORDER_DEFAULT);
 
-    WIN win;
-    int ch;
+    getch();
 
-    initscr();                  /* Start curses mode            */
-    start_color();              /* Start the color functionality */
-    cbreak();                   /* Line buffering disabled, Pass on
-                                * everty thing to me        */
-    keypad(stdscr, TRUE);       /* I need that nifty F1     */
-    noecho();
-    init_pair(1, COLOR_CYAN, COLOR_BLACK);
+    ARC_NCurses_Destroy(mainNCurses);
 
-    /* Initialize the window parameters */
-    init_win_params(&win);
-    print_win_params(&win);
-
-    attron(COLOR_PAIR(1));
-    printw("Press F1 to exit");
-    refresh();
-    attroff(COLOR_PAIR(1));
-
-    create_box(&win, TRUE);
-    while((ch = getch()) != KEY_F(1)){
-        switch(ch){
-            case KEY_LEFT:
-                create_box(&win, FALSE);
-                --win.startx;
-                create_box(&win, TRUE);
-                break;
-            case KEY_RIGHT:
-                create_box(&win, FALSE);
-                ++win.startx;
-                create_box(&win, TRUE);
-                break;
-            case KEY_UP:
-                create_box(&win, FALSE);
-                --win.starty;
-                create_box(&win, TRUE);
-                break;
-            case KEY_DOWN:
-                create_box(&win, FALSE);
-                ++win.starty;
-                create_box(&win, TRUE);
-                break;
-        }
-    }
-    endwin();           /* End curses mode      */
+//    WIN win;
+//    int ch;
+//
+//    noecho();
+//    init_pair(1, COLOR_CYAN, COLOR_BLACK);
+//
+//    /* Initialize the window parameters */
+//    init_win_params(&win);
+//    print_win_params(&win);
+//
+//    attron(COLOR_PAIR(1));
+//    printw("Press F1 to exit");
+//    refresh();
+//    attroff(COLOR_PAIR(1));
+//
+//    create_box(&win, TRUE);
+//    while((ch = getch()) != KEY_F(1)){
+//        switch(ch){
+//            case KEY_LEFT:
+//                create_box(&win, FALSE);
+//                --win.startx;
+//                create_box(&win, TRUE);
+//                break;
+//            case KEY_RIGHT:
+//                create_box(&win, FALSE);
+//                ++win.startx;
+//                create_box(&win, TRUE);
+//                break;
+//            case KEY_UP:
+//                create_box(&win, FALSE);
+//                --win.starty;
+//                create_box(&win, TRUE);
+//                break;
+//            case KEY_DOWN:
+//                create_box(&win, FALSE);
+//                ++win.starty;
+//                create_box(&win, TRUE);
+//                break;
+//        }
+//    }
+//    endwin();           /* End curses mode      */
 
     // ARC_Ssh_Destroy(ssh);
     return 0;

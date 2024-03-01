@@ -5,7 +5,7 @@
 #include <libssh/libssh.h>
 #include <errno.h>
 #include <string.h>
- 
+
 int verify_knownhost(ssh_session session){
     enum ssh_known_hosts_e state;
     unsigned char *hash = NULL;
@@ -36,7 +36,7 @@ int verify_knownhost(ssh_session session){
 
         case SSH_KNOWN_HOSTS_CHANGED:
             fprintf(stderr, "Host key for server changed: it is now:\n");
-            ssh_print_hexa("Public key hash", hash, hlen);
+            //ssh_print_hexa("Public key hash", hash, hlen);
             fprintf(stderr, "For security reasons, connection will be stopped\n");
             ssh_clean_pubkey_hash(&hash);
             return -1;
