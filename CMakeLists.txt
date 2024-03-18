@@ -14,6 +14,7 @@ add_executable(ani-gui-pi
     src/main.c
 
     src/arc/ncurses/ncurses.c
+    src/arc/ncurses/element.c
 
     src/arc/ssh/ssh.c
 )
