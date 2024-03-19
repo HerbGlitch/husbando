@@ -1,10 +1,9 @@
-#include <curses.h>
-#include <libssh/libssh.h>
+#include <ncurses.h>
+#include <arc/console/view.h>
+#include <arc/console/element.h>
+#include <arc/math/point.h>
+#include <arc/std/string.h>
 //#include "arc/ssh/ssh.h"
-#include "arc/math/point.h"
-#include "arc/ncurses/ncurses.h"
-#include "arc/ncurses/element.h"
-#include "arc/std/string.h"
 
 // static ARC_Ssh *ssh;
 
@@ -27,9 +26,9 @@ alias pclose='ydotool key 125:1 46:1 46:0 125:0'
 
 int main(int argc, char *argv[]){
     // ARC_Ssh_Create(&ssh);
-    ARC_NCurses *mainNCurses;
-    ARC_NCurses_Create(&mainNCurses, NULL);
-    ARC_NCurses_SetBorder(mainNCurses, ARC_NCURSES_BORDER_DEFAULT);
+    ARC_ConsoleView *mainConsoleView;
+    ARC_ConsoleView_Create(&mainConsoleView, NULL);
+    ARC_ConsoleView_SetBorder(mainConsoleView, ARC_CONSOLE_VIEW_BORDER_DEFAULT);
 
     ARC_String *string0;
     ARC_String *string1;
@@ -41,30 +40,30 @@ int main(int argc, char *argv[]){
     ARC_String_CreateWithStrlen(&string2, "OPTION 3");
     ARC_String_CreateWithStrlen(&string3, "OPTION 4");
 
-    ARC_NCursesElement *element0;
-    ARC_NCursesElement *element1;
-    ARC_NCursesElement *element2;
-    ARC_NCursesElement *element3;
+    ARC_ConsoleElement *element0;
+    ARC_ConsoleElement *element1;
+    ARC_ConsoleElement *element2;
+    ARC_ConsoleElement *element3;
 
-    ARC_NCursesElement_Create(&element0, 0, ARC_NCURSES_ELEMENT_FLAG_NONE, string0, (ARC_Point){1, 1}, ARC_NCursesElement_DefaultRenderFn);
-    ARC_NCursesElement_Create(&element1, 0, ARC_NCURSES_ELEMENT_FLAG_NONE, string1, (ARC_Point){1, 2}, ARC_NCursesElement_DefaultRenderFn);
-    ARC_NCursesElement_Create(&element2, 0, ARC_NCURSES_ELEMENT_FLAG_NONE, string2, (ARC_Point){1, 3}, ARC_NCursesElement_DefaultRenderFn);
-    ARC_NCursesElement_Create(&element3, 0, ARC_NCURSES_ELEMENT_FLAG_NONE, string3, (ARC_Point){1, 4}, ARC_NCursesElement_DefaultRenderFn);
+    ARC_ConsoleElement_Create(&element0, 0, ARC_CONSOLE_ELEMENT_FLAG_NONE, string0, (ARC_Point){1, 1}, ARC_ConsoleElement_DefaultRenderFn);
+    ARC_ConsoleElement_Create(&element1, 0, ARC_CONSOLE_ELEMENT_FLAG_NONE, string1, (ARC_Point){1, 2}, ARC_ConsoleElement_DefaultRenderFn);
+    ARC_ConsoleElement_Create(&element2, 0, ARC_CONSOLE_ELEMENT_FLAG_NONE, string2, (ARC_Point){1, 3}, ARC_ConsoleElement_DefaultRenderFn);
+    ARC_ConsoleElement_Create(&element3, 0, ARC_CONSOLE_ELEMENT_FLAG_NONE, string3, (ARC_Point){1, 4}, ARC_ConsoleElement_DefaultRenderFn);
 
-    ARC_NCurses_AddElement(mainNCurses, element0);
-    ARC_NCurses_AddElement(mainNCurses, element1);
-    ARC_NCurses_AddElement(mainNCurses, element2);
-    ARC_NCurses_AddElement(mainNCurses, element3);
+    ARC_ConsoleView_AddElement(mainConsoleView, element0);
+    ARC_ConsoleView_AddElement(mainConsoleView, element1);
+    ARC_ConsoleView_AddElement(mainConsoleView, element2);
+    ARC_ConsoleView_AddElement(mainConsoleView, element3);
 
-    ARC_NCursesElement *selectedElement = ARC_NCurses_GetElement(mainNCurses, 0);
-    ARC_NCursesElement_SetSelected(selectedElement, ARC_True);
+    ARC_ConsoleElement *selectedElement = ARC_ConsoleView_GetElement(mainConsoleView, 0);
+    ARC_ConsoleElement_SetSelected(selectedElement, ARC_True);
 
-    ARC_NCurses_RenderElements(mainNCurses);
+    ARC_ConsoleView_RenderElements(mainConsoleView);
 
     int32_t character = getch();
     int32_t selected = 0;
     while(character != KEY_F(1)){
-        ARC_NCursesElement_SetSelected(selectedElement, ARC_False);
+        ARC_ConsoleElement_SetSelected(selectedElement, ARC_False);
 
         switch(character){
             case KEY_UP:
@@ -82,29 +81,29 @@ int main(int argc, char *argv[]){
                 break;
         }
 
-        selectedElement = ARC_NCurses_GetElement(mainNCurses, selected);
-        ARC_NCursesElement_SetSelected(selectedElement, ARC_True);
+        selectedElement = ARC_ConsoleView_GetElement(mainConsoleView, selected);
+        ARC_ConsoleElement_SetSelected(selectedElement, ARC_True);
 
-        ARC_NCurses_RenderElements(mainNCurses);
+        ARC_ConsoleView_RenderElements(mainConsoleView);
         character = getch();
     }
 
-    ARC_NCurses_RemoveElement(mainNCurses, 0);
-    ARC_NCurses_RemoveElement(mainNCurses, 0);
-    ARC_NCurses_RemoveElement(mainNCurses, 0);
-    ARC_NCurses_RemoveElement(mainNCurses, 0);
+    ARC_ConsoleView_RemoveElement(mainConsoleView, 0);
+    ARC_ConsoleView_RemoveElement(mainConsoleView, 0);
+    ARC_ConsoleView_RemoveElement(mainConsoleView, 0);
+    ARC_ConsoleView_RemoveElement(mainConsoleView, 0);
 
     ARC_String_Destroy(element0->string);
     ARC_String_Destroy(element1->string);
     ARC_String_Destroy(element2->string);
     ARC_String_Destroy(element3->string);
 
-    ARC_NCursesElement_Destroy(element0);
-    ARC_NCursesElement_Destroy(element1);
-    ARC_NCursesElement_Destroy(element2);
-    ARC_NCursesElement_Destroy(element3);
+    ARC_ConsoleElement_Destroy(element0);
+    ARC_ConsoleElement_Destroy(element1);
+    ARC_ConsoleElement_Destroy(element2);
+    ARC_ConsoleElement_Destroy(element3);
 
-    ARC_NCurses_Destroy(mainNCurses);
+    ARC_ConsoleView_Destroy(mainConsoleView);
 
     // ARC_Ssh_Destroy(ssh);
     return 0;
