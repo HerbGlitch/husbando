@@ -32,10 +32,16 @@ void Temp_ConsoleShell_UpdateFn(ARC_ConsoleShell *shell){
     ARC_String *prompt;
     ARC_String_CreateWithStrlen(&prompt, "SHELL > ");
 
-    ARC_Point currentPos = (ARC_Point){ 1, 1 };
+    ARC_Point currentPos = (ARC_Point){ 0, 0 };
+    ARC_Rect viewBounds = ARC_ConsoleView_GetBounds(shell->view);
 
     ARC_Bool running = ARC_True;
     while(running){
+        currentPos.y = ARC_ConsoleBuffer_GetLineNumbers(shell->buffer) - 1;
+        if(currentPos.y >= viewBounds.h){
+            currentPos.y = viewBounds.y - 1;
+        }
+
         ARC_ConsoleView_RenderStringAt(shell->view, prompt, currentPos);
 
         ARC_String *input = ARC_ConsoleView_GetStringInput(shell->view, (ARC_Point){ currentPos.x + prompt->length, currentPos.y });
@@ -48,8 +54,17 @@ void Temp_ConsoleShell_UpdateFn(ARC_ConsoleShell *shell){
             running = ARC_False;
         }
 
+        ARC_String *promptCopy;
+        ARC_String_Copy(&promptCopy, prompt);
+        ARC_ConsoleBuffer_AddString(shell->buffer, promptCopy);
         ARC_ConsoleBuffer_AddString(shell->buffer, input);
-        ARC_String_Destroy(input);
+        ARC_ConsoleBuffer_AddChar(shell->buffer, '\n');
+
+        ARC_String *inputCopy;
+        ARC_String_Copy(&inputCopy, input);
+        ARC_ConsoleBuffer_AddString(shell->buffer, inputCopy);
+        ARC_ConsoleBuffer_AddChar(shell->buffer, '\n');
+
         ARC_ConsoleBuffer_Render(shell->buffer, shell->view);
     }
 
