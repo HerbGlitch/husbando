@@ -17,6 +17,9 @@ add_executable(husbando
 
     src/tui/base.c
     src/tui/container.c
+    src/tui/page.c
+    src/tui/pages/index.c
+    src/tui/pages/notes.c
 )
 
 target_include_directories(husbando

@@ -1,25 +1,18 @@
 #ifndef HUSBANDO_TUI_CONTAINER_H_
 #define HUSBANDO_TUI_CONTAINER_H_
 
+#include "page.h"
+#include <pthread.h>
+#include <stdint.h>
 #include <arc/console/buffer.h>
 #include <arc/console/view.h>
 #include <arc/math/point.h>
 #include <arc/std/bool.h>
-#include <pthread.h>
-#include <stdint.h>
+#include <arc/std/stack.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/**
- * @breif a callback function for the tui container, used to update the buffer in the background (like for video time)
- *
- * @param buffer     the main container buffer to update
- * @param updateView a boolean to signal if the view should update right away (recommended if the buffer changed)
- * @param userdata   data that should be passed into the function that has this function as a callback, can be NULL
-*/
-typedef void (* HUSBANDO_TUIContainer_PollFn)(ARC_ConsoleBuffer *buffer, ARC_Bool *updateView, void *userdata);
 
 /**
  * @breif the tui container type, basically holds all of the tui, will be multithreaded to allow for background refreshing
@@ -27,10 +20,19 @@ typedef void (* HUSBANDO_TUIContainer_PollFn)(ARC_ConsoleBuffer *buffer, ARC_Boo
 typedef struct HUSBANDO_TUIContainer {
     ARC_ConsoleView   *view;
     ARC_ConsoleBuffer *buffer;
+    ARC_Stack         *consoleKeyStack;
+
+    HUSBANDO_TUIPage *page;
+
+    ARC_Bool captureInput;
 
     ARC_Point cursor;
+    ARC_Bool  visibleCursor;
 
     ARC_Bool updateView;
+    ARC_Bool running;
+
+    uint32_t pollTime;
 
     pthread_t       pollThread;
     pthread_mutex_t bufferMutex;
@@ -43,8 +45,10 @@ typedef struct HUSBANDO_TUIContainer {
  *
  * @param container the tui container to create
  * @param title     the title of the container can be null
+ * @param page      the initial page for the container, if null HUSBANDO_TUIContainer_RunPage will not work
+ * @param pollTime  the time in miliseconds to pull the page data, set to zero to not poll the page
 */
-void HUSBANDO_TUIContainer_Create(HUSBANDO_TUIContainer **container, char *title);
+void HUSBANDO_TUIContainer_Create(HUSBANDO_TUIContainer **container, char *title, HUSBANDO_TUIPage *page, uint32_t pollTime);
 
 /**
  * @breif frees allocated memory in the tui container and deletes the container
@@ -54,14 +58,26 @@ void HUSBANDO_TUIContainer_Create(HUSBANDO_TUIContainer **container, char *title
 void HUSBANDO_TUIContainer_Destory(HUSBANDO_TUIContainer *container);
 
 /**
- * @breif runs the container on two threads, one for a page and one for a poll function
+ * @breif runs the container page on two threads, one for a main function and one for a poll function
  *
- * @param container the tui container that will run
- * @param pollTime  the time in miliseconds to run the pull callback on
- * @param pollFn    a provided callback that can update the containers buffer
- * @param userdata  userdata that will be passed along to be used in the pollFn callback, can be NULL
+ * @param container the tui container that will run its page
 */
-void HUSBANDO_TUIContainer_RunPageAndPoll(HUSBANDO_TUIContainer *container, uint32_t pollTime, HUSBANDO_TUIContainer_PollFn pollFn, void *userdata);
+void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container);
+
+/**
+ * @breif clears the console key buffer within a given tui container
+ *
+ * @param container the tui to clear the key buffer from
+*/
+void HUSBANDO_TUIContainer_ClearConsoleKeyStack(HUSBANDO_TUIContainer *container);
+
+/**
+ * @brief sets the tui containers page
+ *
+ * @param container the conter which is having its page being set
+ * @param page      the page to set in the container, can be NULL
+*/
+void HUSBANDO_TUIContainer_SetPage(HUSBANDO_TUIContainer *container, HUSBANDO_TUIPage *page);
 
 #ifdef __cplusplus
 }
