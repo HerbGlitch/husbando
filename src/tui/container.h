@@ -4,7 +4,6 @@
 #include "page.h"
 #include <pthread.h>
 #include <stdint.h>
-#include <arc/console/buffer.h>
 #include <arc/console/view.h>
 #include <arc/math/point.h>
 #include <arc/std/bool.h>
@@ -18,9 +17,10 @@ extern "C" {
  * @breif the tui container type, basically holds all of the tui, will be multithreaded to allow for background refreshing
 */
 typedef struct HUSBANDO_TUIContainer {
-    ARC_ConsoleView   *view;
-    ARC_ConsoleBuffer *buffer;
-    ARC_Stack         *consoleKeyStack;
+    ARC_ConsoleView *view;
+    ARC_Stack       *consoleKeyStack;
+
+    char *title;
 
     HUSBANDO_TUIPage *page;
 
@@ -29,7 +29,6 @@ typedef struct HUSBANDO_TUIContainer {
     ARC_Point cursor;
     ARC_Bool  visibleCursor;
 
-    ARC_Bool updateView;
     ARC_Bool running;
 
     uint32_t pollTime;

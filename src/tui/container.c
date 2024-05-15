@@ -4,7 +4,6 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <time.h>
-#include <arc/console/buffer.h>
 #include <arc/console/key.h>
 #include <arc/console/view.h>
 #include <arc/math/point.h>
@@ -17,29 +16,21 @@
 void HUSBANDO_TUIContainer_Create(HUSBANDO_TUIContainer **container, char *title, HUSBANDO_TUIPage *page, uint32_t pollTime){
     *container = (HUSBANDO_TUIContainer *)malloc(sizeof(HUSBANDO_TUIContainer));
 
-    //create the view as well as set the title and a border
     ARC_ConsoleView_Create(&((*container)->view), (ARC_Rect){ 0, 0, 0, 0 });
-    ARC_ConsoleView_SetBorder((*container)->view, ARC_CONSOLE_VIEW_BORDER_DEFAULT);
-    if(title != NULL){
-        ARC_String *titleString;
-        ARC_String_CreateWithStrlen(&titleString, title);
-        ARC_ConsoleView_RenderStringAt((*container)->view, titleString, (ARC_Point){ 2, 0 });
-        ARC_String_Destroy(titleString);
-    }
-
-    //create the containers contents
-    ARC_ConsoleBuffer_Create(&((*container)->buffer));
     ARC_Stack_Create(&((*container)->consoleKeyStack));
+
+    (*container)->title = title;
 
     (*container)->page = page;
 
     (*container)->captureInput = ARC_False;
 
     (*container)->cursor = (ARC_Point){ 0, 0 };
-    (*container)->visibleCursor = ARC_True;
+    (*container)->visibleCursor = ARC_False;
 
-    (*container)->updateView = ARC_True;
-    (*container)->running    = ARC_False;
+    ARC_ConsoleView_SetCursorVisibility((*container)->view, ARC_CONSOLE_VIEW_CURSOR_HIDDEN);
+
+    (*container)->running = ARC_False;
 
     (*container)->pollTime = pollTime;
 
@@ -53,7 +44,6 @@ void HUSBANDO_TUIContainer_Create(HUSBANDO_TUIContainer **container, char *title
         HUSBANDO_TUIContainer_ClearConsoleKeyStack(*container);
 
         ARC_Stack_Destroy((*container)->consoleKeyStack);
-        ARC_ConsoleBuffer_Destroy((*container)->buffer);
         ARC_ConsoleView_Destroy((*container)->view);
 
         free(*container);
@@ -66,7 +56,6 @@ void HUSBANDO_TUIContainer_Destory(HUSBANDO_TUIContainer *container){
     HUSBANDO_TUIContainer_ClearConsoleKeyStack(container);
 
     ARC_Stack_Destroy(container->consoleKeyStack);
-    ARC_ConsoleBuffer_Destroy(container->buffer);
     ARC_ConsoleView_Destroy(container->view);
 
     free(container);
@@ -75,11 +64,9 @@ void HUSBANDO_TUIContainer_Destory(HUSBANDO_TUIContainer *container){
 //private type for polling
 typedef struct HUSBANDO_TUIContainerPollParams {
     HUSBANDO_TUIPage_PollFn pollFn;
+    ARC_ConsoleView *view;
     void *data;
 
-    ARC_ConsoleView *view;
-    ARC_ConsoleBuffer *buffer;
-    ARC_Bool *updateView;
     ARC_Bool *running;
     uint32_t pollTime;
 
@@ -97,12 +84,7 @@ void *HUSBANDO_TUIContainer_RunPoll(void *data){
 
     while(threadRunning){
         pthread_mutex_lock(pollParams->bufferMutex);
-        pollParams->pollFn(pollParams->buffer, pollParams->updateView, pollParams->data);
-
-        if(*(pollParams->updateView)){
-            ARC_ConsoleBuffer_Render(pollParams->buffer, pollParams->view);
-            *(pollParams->updateView) = ARC_False;
-        }
+        pollParams->pollFn(pollParams->view, pollParams->data);
         pthread_mutex_unlock(pollParams->bufferMutex);
 
         nanosleep(&sleepTime, &sleepTime);
@@ -124,11 +106,9 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
 
     HUSBANDO_TUIContainerPollParams pollParams = {
         container->page->pollFn,
+        container->page->view,
         container->page->data,
 
-        container->view,
-        container->buffer,
-        &(container->updateView),
         &(container->running),
         container->pollTime,
 
@@ -143,6 +123,11 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
         return;
     }
 
+    //update once before running
+    pthread_mutex_lock(&(container->bufferMutex));
+    container->page->mainFn(container->page->view, container->page->data);
+    pthread_mutex_unlock(&(container->bufferMutex));
+
     //main thread, handle key inputs and exiting
     container->running = ARC_True;
     while(container->running){
@@ -152,6 +137,10 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
             container->running = ARC_False;
             pthread_mutex_unlock(&(container->bufferMutex));
         }
+
+        pthread_mutex_lock(&(container->bufferMutex));
+        container->page->mainFn(container->page->view, container->page->data);
+        pthread_mutex_unlock(&(container->bufferMutex));
     }
 
     //join the threads on end

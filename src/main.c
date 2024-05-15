@@ -1,17 +1,24 @@
 #include "tui/container.h"
 #include "tui/page.h"
 #include "tui/pages/index.h"
+#include <arc/console/view.h>
+#include <arc/math/rectangle.h>
 
 int main(int argc, char *argv[]){
-    HUSBANDO_TUIPage *page;
-    HUSBANDO_TUIPage_CreateIndex(&page);
-
     HUSBANDO_TUIContainer *container;
-    HUSBANDO_TUIContainer_Create(&container, "Husbando", page, 100);
+    HUSBANDO_TUIContainer_Create(&container, "Husbando", NULL, 100);
+
+    ARC_Rect pageSize = ARC_ConsoleView_GetBounds(container->view);
+
+    HUSBANDO_TUIPage *page;
+    HUSBANDO_TUIPage_CreateIndex(&page, container, pageSize);
+
+    HUSBANDO_TUIContainer_SetPage(container, page);
     HUSBANDO_TUIContainer_RunPage(container);
-    HUSBANDO_TUIContainer_Destory(container);
 
     HUSBANDO_TUIPage_DestroyIndex(page);
+
+    HUSBANDO_TUIContainer_Destory(container);
     return 0;
 }
 
