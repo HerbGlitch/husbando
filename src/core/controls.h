@@ -44,14 +44,21 @@ void HUSBANDO_Core_ControlsSeekRight(HUSBANDO_Core *core);
  *
  * @param
 */
-void HUSBANDO_Core_ControlsSetTime(HUSBANDO_Core *core, struct tm *timeinfo);
+void HUSBANDO_Core_ControlsSetCurrentTime(HUSBANDO_Core *core, struct tm *timeinfo);
 
 /**
  * @breif
  *
  * @param
 */
-struct tm *HUSBANDO_Core_ControlsGetTime(HUSBANDO_Core *core);
+struct tm *HUSBANDO_Core_ControlsGetCurrentTime(HUSBANDO_Core *core);
+
+/**
+ * @breif
+ *
+ * @param
+*/
+struct tm *HUSBANDO_Core_ControlsGetFullTime(HUSBANDO_Core *core);
 
 /**
  * @breif

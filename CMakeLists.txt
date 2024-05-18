@@ -15,6 +15,9 @@ find_package(LIBSSH REQUIRED)
 add_executable(husbando
     src/main.c
 
+    src/core/controls.c
+    src/core/core.c
+
     src/tui/base.c
     src/tui/container.c
     src/tui/page.c
