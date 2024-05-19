@@ -5,6 +5,7 @@
 #include <arc/console/view.h>
 #include <arc/math/rectangle.h>
 #include <arc/std/string.h>
+#include <arc/std/time.h>
 
 void HUSBANDO_TUIBase_Create(HUSBANDO_TUIBase **base, ARC_Rect bounds, char *title){
     *base = (HUSBANDO_TUIBase *)malloc(sizeof(HUSBANDO_TUIBase));
@@ -13,7 +14,8 @@ void HUSBANDO_TUIBase_Create(HUSBANDO_TUIBase **base, ARC_Rect bounds, char *tit
 
     time_t timer;
     time(&timer);
-    (*base)->timeinfo = localtime(&timer);
+    (*base)->currentTime = ARC_Time_CopyFromStructTmPtr(localtime(&timer));
+    (*base)->fullTime = (ARC_Time){ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
     //draw the header
     ARC_ConsoleView_SetBorder((*base)->view, ARC_CONSOLE_VIEW_BORDER_DEFAULT);
@@ -52,11 +54,11 @@ void HUSBANDO_TUIBase_Main(HUSBANDO_TUIBase *base){
 
     time_t timer;
     time(&timer);
-    base->timeinfo = localtime(&timer);
+    base->currentTime = ARC_Time_CopyFromStructTmPtr(localtime(&timer));
 
-    HUSBANDO_TUIBase_RenderTime(base, base->timeinfo, (ARC_Point){ bounds.x + 18, bounds.y + 2 });
+    HUSBANDO_TUIBase_RenderARCTime(base, base->currentTime, (ARC_Point){ bounds.x + 18, bounds.y + 2 });
     ARC_ConsoleView_RenderCharAt(base->view, '/', (ARC_Point){ bounds.x + 26, bounds.y + 2 });
-    HUSBANDO_TUIBase_RenderTime(base, base->timeinfo, (ARC_Point){ bounds.x + 27, bounds.y + 2 });
+    HUSBANDO_TUIBase_RenderARCTime(base, base->fullTime, (ARC_Point){ bounds.x + 27, bounds.y + 2 });
 
     //controls
     ARC_ConsoleView_RenderRect(base->view, (ARC_Rect){ bounds.x + 36, bounds.y + 1, 5, 3 });
@@ -96,42 +98,42 @@ void HUSBANDO_TUIBase_Main(HUSBANDO_TUIBase *base){
 void HUSBANDO_TUIBase_PollIndex(HUSBANDO_TUIBase *base){
     ARC_Rect bounds = ARC_ConsoleView_GetBounds(base->view);
 
-    struct tm oldTimeInfo = *(base->timeinfo);
+    ARC_Time oldCurrentTime = base->currentTime;
     time_t timer;
     time(&timer);
-    base->timeinfo = localtime(&timer);
+    base->currentTime = ARC_Time_CopyFromStructTmPtr(localtime(&timer));
 
-    if(oldTimeInfo.tm_sec != base->timeinfo->tm_sec){
-        HUSBANDO_TUIBase_RenderTime(base, base->timeinfo, (ARC_Point){ bounds.x + 18, bounds.y + 2 });
-        HUSBANDO_TUIBase_RenderTime(base, base->timeinfo, (ARC_Point){ bounds.x + 27, bounds.y + 2 });
+    if(oldCurrentTime.seconds != base->currentTime.seconds){
+        HUSBANDO_TUIBase_RenderARCTime(base, base->currentTime, (ARC_Point){ bounds.x + 18, bounds.y + 2 });
+        HUSBANDO_TUIBase_RenderARCTime(base, base->fullTime   , (ARC_Point){ bounds.x + 27, bounds.y + 2 });
     }
 }
 
-void HUSBANDO_TUIBase_RenderTime(HUSBANDO_TUIBase *base, struct tm *timeinfo, ARC_Point pos){
+void HUSBANDO_TUIBase_RenderARCTime(HUSBANDO_TUIBase *base, ARC_Time time, ARC_Point pos){
     ARC_Rect bounds = ARC_ConsoleView_GetBounds(base->view);
     int32_t zeroOffset = 0;
 
-    if(timeinfo->tm_hour < 10){
+    if(time.hour < 10){
         zeroOffset = 1;
         ARC_ConsoleView_RenderCharAt(base->view, '0', (ARC_Point){ pos.x, bounds.y + 2 });
     }
-    ARC_ConsoleView_RenderUint32At(base->view, timeinfo->tm_hour, (ARC_Point){ pos.x + zeroOffset, pos.y });
+    ARC_ConsoleView_RenderUint32At(base->view, time.hour, (ARC_Point){ pos.x + zeroOffset, pos.y });
     zeroOffset = 0;
 
     ARC_ConsoleView_RenderCharAt(base->view, ':', (ARC_Point){ pos.x + 2, bounds.y + 2 });
 
-    if(timeinfo->tm_min < 10){
+    if(time.minutes < 10){
         zeroOffset = 1;
         ARC_ConsoleView_RenderCharAt(base->view, '0', (ARC_Point){ pos.x + 3, bounds.y + 2 });
     }
-    ARC_ConsoleView_RenderUint32At(base->view, timeinfo->tm_min, (ARC_Point){ pos.x + 3 + zeroOffset, pos.y });
+    ARC_ConsoleView_RenderUint32At(base->view, time.minutes, (ARC_Point){ pos.x + 3 + zeroOffset, pos.y });
     zeroOffset = 0;
 
     ARC_ConsoleView_RenderCharAt(base->view, ':', (ARC_Point){ pos.x + 5, pos.y });
 
-    if(timeinfo->tm_sec < 10){
+    if(time.seconds < 10){
         zeroOffset = 1;
         ARC_ConsoleView_RenderCharAt(base->view, '0', (ARC_Point){ pos.x + 6, bounds.y + 2 });
     }
-    ARC_ConsoleView_RenderUint32At(base->view, timeinfo->tm_sec, (ARC_Point){ pos.x + 6 + zeroOffset, pos.y });
+    ARC_ConsoleView_RenderUint32At(base->view, time.seconds, (ARC_Point){ pos.x + 6 + zeroOffset, pos.y });
 }

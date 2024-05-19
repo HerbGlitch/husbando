@@ -4,6 +4,7 @@
 #include <time.h>
 #include <arc/console/view.h>
 #include <arc/math/rectangle.h>
+#include <arc/std/time.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,7 +15,8 @@ extern "C" {
 */
 typedef struct HUSBANDO_TUIBase {
     ARC_ConsoleView *view;
-    struct tm *timeinfo;
+    ARC_Time currentTime;
+    ARC_Time fullTime;
 } HUSBANDO_TUIBase;
 
 /**
@@ -50,7 +52,7 @@ void HUSBANDO_TUIBase_PollIndex(HUSBANDO_TUIBase *base);
  *
  * @param
 */
-void HUSBANDO_TUIBase_RenderTime(HUSBANDO_TUIBase *base, struct tm *timeinfo, ARC_Point pos);
+void HUSBANDO_TUIBase_RenderARCTime(HUSBANDO_TUIBase *base, ARC_Time time, ARC_Point pos);
 
 #ifdef __cplusplus
 }
