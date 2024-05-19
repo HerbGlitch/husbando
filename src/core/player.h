@@ -1,17 +1,16 @@
 #ifndef HUSBANDO_CORE_PLAYER_H_
 #define HUSBANDO_CORE_PLAYER_H_
 
-#include <stdint.h>
-#include <time.h>
 #include <arc/std/bool.h>
 #include <arc/std/string.h>
+#include <arc/std/time.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @brief predefine of husbando core to be use in the core players callbacks
+ * @brief predefine of husbando core player to be use in the core players callbacks
 */
 typedef struct HUSBANDO_Core HUSBANDO_Core;
 
@@ -53,30 +52,30 @@ typedef void (* HUSBANDO_CorePlayer_SeekRightFn)(HUSBANDO_Core *core);
 typedef void (* HUSBANDO_CorePlayer_SeekLeftFn)(HUSBANDO_Core *core);
 
 /**
- * @breif will set the video players current time to a specified time, also will do nothing if the video doesn't exist
- *
- * @param core     the type holding the videoData that will be used
- * @param timeinfo the time to set the video player to
-*/
-typedef void (* HUSBANDO_CorePlayer_SetCurrentTimeFn)(HUSBANDO_Core *core, struct tm *timeinfo);
-
-/**
  * @breif will get the video's current time
  *
  * @param core the type holding the videoData that will be used
  *
- * @return the current time, or NULL if the video doesn't exist
+ * @return the current video time ARC_Time, or an ARC_Time struct filled with 0s on error
 */
-typedef struct tm *(* HUSBANDO_CorePlayer_GetCurrentTimeFn)(HUSBANDO_Core *core);
+typedef ARC_Time (* HUSBANDO_CorePlayer_GetCurrentTimeFn)(HUSBANDO_Core *core);
 
 /**
  * @breif will get the video's full time
  *
  * @param core the type holding the videoData that will be used
  *
- * @return the full time of the playing video, or NULL if the video doesn't exist
+ * @return the full video time ARC_Time, or an ARC_Time struct filled with 0s on error
 */
-typedef struct tm *(* HUSBANDO_CorePlayer_GetFullTimeFn)(HUSBANDO_Core *core);
+typedef ARC_Time (* HUSBANDO_CorePlayer_GetFullTimeFn)(HUSBANDO_Core *core);
+
+/**
+ * @breif will set the video players current time to a specified time, also will do nothing if the video doesn't exist
+ *
+ * @param core the type holding the videoData that will be used
+ * @param time the time to set the video player to
+*/
+typedef void (* HUSBANDO_CorePlayer_SetCurrentTimeFn)(HUSBANDO_Core *core, ARC_Time time);
 
 /**
  * @breif a struct that holds all of the functions needed to for a core player
@@ -87,9 +86,11 @@ typedef struct HUSBANDO_CorePlayer {
     HUSBANDO_CorePlayer_PauseFn          pauseFn;
     HUSBANDO_CorePlayer_SeekRightFn      seekRightFn;
     HUSBANDO_CorePlayer_SeekLeftFn       seekLeftFn;
-    HUSBANDO_CorePlayer_SetCurrentTimeFn setCurrentTimeFn;
     HUSBANDO_CorePlayer_GetCurrentTimeFn getCurrentTimeFn;
     HUSBANDO_CorePlayer_GetFullTimeFn    getFullTimeFn;
+    HUSBANDO_CorePlayer_SetCurrentTimeFn setCurrentTimeFn;
+
+    void *data;
 } HUSBANDO_CorePlayer;
 
 #ifdef __cplusplus

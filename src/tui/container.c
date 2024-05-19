@@ -1,6 +1,8 @@
 #include "container.h"
 
 #include "page.h"
+#include "core/controls.h"
+#include "core/core.h"
 #include <pthread.h>
 #include <stdlib.h>
 #include <time.h>
@@ -128,6 +130,10 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
     container->page->mainFn(container->page->view, container->page->data);
     pthread_mutex_unlock(&(container->bufferMutex));
 
+    ARC_String *url;
+    ARC_String_CreateWithStrlen(&url, "https://youtu.be/1P5BSm_oFJg");
+    HUSBANDO_Core_ControlsInitFn(husbando_core, url, ARC_True);
+    ARC_String_Destroy(url);
     //main thread, handle key inputs and exiting
     container->running = ARC_True;
     while(container->running){

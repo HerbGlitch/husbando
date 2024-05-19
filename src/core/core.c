@@ -1,7 +1,10 @@
 #include "core.h"
 
+#include "video/mpv/player.h"
 #include <stdlib.h>
 #include <arc/std/string.h>
+
+HUSBANDO_Core *husbando_core = NULL;
 
 void HUSBANDO_Core_Create(HUSBANDO_Core **core, uint8_t playerId){
     *core = (HUSBANDO_Core *)malloc(sizeof(HUSBANDO_Core));
@@ -18,7 +21,6 @@ void HUSBANDO_Core_Create(HUSBANDO_Core **core, uint8_t playerId){
 
     (*core)->player     = NULL;
     (*core)->playerId   = 0;
-    (*core)->playerData = NULL;
     HUSBANDO_Core_SetPlayer(*core, playerId);
 }
 
@@ -38,11 +40,15 @@ void HUSBANDO_Core_Destroy(HUSBANDO_Core *core){
 
 void HUSBANDO_Core_SetPlayer(HUSBANDO_Core *core, uint8_t playerId){
     //clean up last player's data
-    switch(playerId){
+    switch(core->playerId){
         case HUSBANDO_CORE_VIDEO_PLAYER_NONE:
             break;
+
         case HUSBANDO_CORE_VIDEO_PLAYER_MPV:
+            HUSBANDO_CorePlayer_DestroyMPVPlayer(core->player);
+            core->player = NULL;
             break;
+
         case HUSBANDO_CORE_VIDEO_PLAYER_CVLC:
             break;
     }
@@ -51,11 +57,14 @@ void HUSBANDO_Core_SetPlayer(HUSBANDO_Core *core, uint8_t playerId){
     core->playerId = playerId;
 
     //set new player's data
-    switch(playerId){
+    switch(core->playerId){
         case HUSBANDO_CORE_VIDEO_PLAYER_NONE:
             break;
+
         case HUSBANDO_CORE_VIDEO_PLAYER_MPV:
+            HUSBANDO_CorePlayer_CreateMPVPlayer(&(core->player));
             break;
+
         case HUSBANDO_CORE_VIDEO_PLAYER_CVLC:
             break;
     }

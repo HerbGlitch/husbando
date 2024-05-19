@@ -30,8 +30,12 @@ typedef struct HUSBANDO_Core {
 
     HUSBANDO_CorePlayer *player;
     uint8_t              playerId;
-    void                *playerData;
 } HUSBANDO_Core;
+
+/**
+ * @breif a global instance of core, will be set to NULL and need to be created somewhere
+*/
+extern HUSBANDO_Core *husbando_core;
 
 /**
  * @breif creates the core of husbando, will init a player as well as a ssh connect (if the config defaults to connect), also loads in notes

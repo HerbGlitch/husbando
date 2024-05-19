@@ -1,3 +1,4 @@
+#include "core/core.h"
 #include "tui/container.h"
 #include "tui/page.h"
 #include "tui/pages/index.h"
@@ -5,6 +6,8 @@
 #include <arc/math/rectangle.h>
 
 int main(int argc, char *argv[]){
+    HUSBANDO_Core_Create(&husbando_core, HUSBANDO_CORE_VIDEO_PLAYER_MPV);
+
     HUSBANDO_TUIContainer *container;
     HUSBANDO_TUIContainer_Create(&container, "Husbando", NULL, 100);
 
@@ -19,6 +22,8 @@ int main(int argc, char *argv[]){
     HUSBANDO_TUIPage_DestroyIndex(page);
 
     HUSBANDO_TUIContainer_Destory(container);
+
+    HUSBANDO_Core_Destroy(husbando_core);
     return 0;
 }
 
