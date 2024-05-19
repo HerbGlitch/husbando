@@ -2,24 +2,6 @@
 
 #include "core.h"
 
-void HUSBANDO_Core_ControlsVolumeIncrement(HUSBANDO_Core *core){
-    if(core->playerId == HUSBANDO_CORE_VIDEO_PLAYER_NONE || core->player == NULL){
-        //TODO: notify no player exists
-        return;
-    }
-
-    //TODO: increment computer volume
-}
-
-void HUSBANDO_Core_ControlsVolumeDecrement(HUSBANDO_Core *core){
-    if(core->playerId == HUSBANDO_CORE_VIDEO_PLAYER_NONE || core->player == NULL){
-        //TODO: notify no player exists
-        return;
-    }
-
-    //TODO: decrement computer volume
-}
-
 void HUSBANDO_Core_ControlsSeekLeft(HUSBANDO_Core *core){
     if(core->playerId == HUSBANDO_CORE_VIDEO_PLAYER_NONE || core->player == NULL){
         //TODO: notify no player exists
