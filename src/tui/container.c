@@ -130,10 +130,6 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
     container->page->mainFn(container->page->view, container->page->data);
     pthread_mutex_unlock(&(container->bufferMutex));
 
-    ARC_String *url;
-    ARC_String_CreateWithStrlen(&url, "https://youtu.be/1P5BSm_oFJg");
-    HUSBANDO_Core_ControlsInitFn(husbando_core, url, ARC_True);
-    ARC_String_Destroy(url);
     //main thread, handle key inputs and exiting
     container->running = ARC_True;
     while(container->running){
@@ -142,6 +138,14 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
             pthread_mutex_lock(&(container->bufferMutex));
             container->running = ARC_False;
             pthread_mutex_unlock(&(container->bufferMutex));
+            break;
+        }
+
+        if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_S)){
+            ARC_String *url;
+            ARC_String_CreateWithStrlen(&url, "https://youtu.be/1P5BSm_oFJg");
+            HUSBANDO_Core_ControlsInitFn(husbando_core, url, ARC_True);
+            ARC_String_Destroy(url);
         }
 
         pthread_mutex_lock(&(container->bufferMutex));
