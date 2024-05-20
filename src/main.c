@@ -1,3 +1,4 @@
+#include "config.h"
 #include "core/core.h"
 #include "tui/container.h"
 #include "tui/page.h"
@@ -6,10 +7,12 @@
 #include <arc/math/rectangle.h>
 
 int main(int argc, char *argv[]){
+    HUSBANDO_Config_Init("res/config/husbando.ini");
+
     HUSBANDO_Core_Create(&husbando_core, HUSBANDO_CORE_VIDEO_PLAYER_MPV);
 
     HUSBANDO_TUIContainer *container;
-    HUSBANDO_TUIContainer_Create(&container, "Husbando", NULL, 100);
+    HUSBANDO_TUIContainer_Create(&container, (char *)husbando_config.Tui.containerName, NULL, 100);
 
     ARC_Rect pageSize = ARC_ConsoleView_GetBounds(container->view);
 
@@ -24,6 +27,8 @@ int main(int argc, char *argv[]){
     HUSBANDO_TUIContainer_Destory(container);
 
     HUSBANDO_Core_Destroy(husbando_core);
+
+    HUSBANDO_Config_Deinit();
     return 0;
 }
 
