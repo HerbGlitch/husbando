@@ -66,14 +66,14 @@ void HUSBANDO_Config_Init(const char *path);
 void HUSBANDO_Config_Deinit();
 
 /**
- * @brief
+ * @brief a callback for ini.h, used in ini_parse
  *
  * @note overrides the hander function callback for ini.h
  *
- * @param user
- * @param section
- * @param name
- * @param value
+ * @param user    the config struct
+ * @param section the current section as a c string
+ * @param name    the current variable name as a c string
+ * @param value   the current variable value as a c string
 */
 int32_t HUSBANDO_Config_HandlerFn(void *user, const char *section, const char *name, const char *value);
 
