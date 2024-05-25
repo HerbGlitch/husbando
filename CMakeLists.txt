@@ -7,6 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_FLAGS "-Wall -Werror -g -ggdb -DARC_DEBUG ")
 
 set(ARCHEUS_STD_CONSOLE_BACKEND "NCURSES" CACHE STRING "use ncurses")
+set(ARCHEUS_STD_SSH_BACKEND     "LIBSSH"  CACHE STRING "use libssh" )
 
 add_subdirectory(lib/arc)
 

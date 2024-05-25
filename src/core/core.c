@@ -1,8 +1,11 @@
 #include "core.h"
 
+#include "config.h"
 #include "video/mpv/player.h"
 #include <stdlib.h>
+#include <arc/std/bool.h>
 #include <arc/std/string.h>
+#include <arc/networking/ssh.h>
 
 HUSBANDO_Core *husbando_core = NULL;
 
@@ -11,6 +14,9 @@ void HUSBANDO_Core_Create(HUSBANDO_Core **core, uint8_t playerId){
 
     //TODO: create ssh if ini is set to default connection
     (*core)->ssh = NULL;
+    if(husbando_config.Main.sshOnInit == 1){
+        HUSBANDO_Core_SetSsh(*core, ARC_True);
+    }
 
     (*core)->videoName   = NULL;
     (*core)->videoUrl    = NULL;
@@ -25,6 +31,7 @@ void HUSBANDO_Core_Create(HUSBANDO_Core **core, uint8_t playerId){
 }
 
 void HUSBANDO_Core_Destroy(HUSBANDO_Core *core){
+    HUSBANDO_Core_SetSsh(core, ARC_False);
     HUSBANDO_Core_SetPlayer(core, HUSBANDO_CORE_VIDEO_PLAYER_NONE);
 
     if(core->videoName != NULL){
@@ -71,5 +78,11 @@ void HUSBANDO_Core_SetPlayer(HUSBANDO_Core *core, uint8_t playerId){
 }
 
 void HUSBANDO_Core_SetSsh(HUSBANDO_Core *core, ARC_Bool sshConnect){
-    
+    if(!sshConnect && core->ssh != NULL){
+        ARC_Ssh_Destroy(core->ssh);
+        core->ssh = NULL;
+        return;
+    }
+
+    ARC_Ssh_Create(&(core->ssh), (char *)husbando_config.Ssh.hostname, (char *)husbando_config.Ssh.user, (char *)husbando_config.Ssh.password);
 }

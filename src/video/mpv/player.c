@@ -47,6 +47,20 @@ void HUSBANDO_MPV_InitFn(HUSBANDO_Core *core, ARC_String *url, ARC_Bool autoPlay
 
     //start the player with the given socket path
     //TODO: clean this up
+    if(core->ssh != NULL){
+//        char sshCommand[strlen("export DISPLAY=:0 ; echo \"mpv ") + url->length + strlen(" --input-ipc-server=") + strlen(HUSBANDO_MPV_SOCKET_PATH) + strlen(" & disown\" | at now") + 1];
+//        strcpy(sshCommand                                                          , "export DISPLAY=:0 ; mpv ");
+//        strcpy(sshCommand + strlen("export DISPLAY=:0 ; echo \"mpv ")                                                      , url->data);
+//        strcpy(sshCommand + strlen("export DISPLAY=:0 ; echo \"mpv ") + url->length                                        , " --input-ipc-server=");
+//        strcpy(sshCommand + strlen("export DISPLAY=:0 ; echo \"mpv ") + url->length + 20                                   , HUSBANDO_MPV_SOCKET_PATH);
+//        strcpy(sshCommand + strlen("export DISPLAY=:0 ; echo \"mpv ") + url->length + 20 + strlen(HUSBANDO_MPV_SOCKET_PATH), " & disown\" | at now");
+//        printf("%s\n", sshCommand);
+//        sshCommand[strlen("export DISPLAY=:0 ; echo \"mpv ") + url->length + 20 + strlen(HUSBANDO_MPV_SOCKET_PATH) + strlen(" & disown\" | at now") + 1] = '\0';
+//        ARC_Ssh_ExecStrInNewSession(core->ssh, sshCommand);
+        ARC_Ssh_ExecStrInNewSession(core->ssh, "echo \"export DISPLAY=:0 ; mpv https://youtu.be/1P5BSm_oFJg --input-ipc-server=/tmp/mpvsocket & disown\" | at now");
+        return;
+    }
+
     char systemCommand[strlen("mpv ") + url->length + strlen(" --input-ipc-server=") + strlen(HUSBANDO_MPV_SOCKET_PATH) + strlen(" --no-terminal") + 1];
     strcpy(systemCommand                                                          , "mpv ");
     strcpy(systemCommand + 4                                                      , url->data);
@@ -63,15 +77,24 @@ void HUSBANDO_MPV_InitFn(HUSBANDO_Core *core, ARC_String *url, ARC_Bool autoPlay
 }
 
 void HUSBANDO_MPV_PlayFn(HUSBANDO_Core *core){
+    if(core->ssh != NULL){
+        ARC_Ssh_ExecStrInNewSession(core->ssh, "echo 'show-text ${playback-time}' | socat - " HUSBANDO_MPV_SOCKET_PATH);
+    }
 }
 
 void HUSBANDO_MPV_PauseFn(HUSBANDO_Core *core){
 }
 
 void HUSBANDO_MPV_SeekRightFn(HUSBANDO_Core *core){
+    if(core->ssh != NULL){
+        ARC_Ssh_ExecStrInNewSession(core->ssh, "sudo ydotool key 106:1 106:0");
+    }
 }
 
 void HUSBANDO_MPV_SeekLeftFn(HUSBANDO_Core *core){
+    if(core->ssh != NULL){
+        ARC_Ssh_ExecStrInNewSession(core->ssh, "sudo ydotool key 105:1 105:0");
+    }
 }
 
 ARC_Time HUSBANDO_MPV_GetCurrentTimeFn(HUSBANDO_Core *core){

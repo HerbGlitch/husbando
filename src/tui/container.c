@@ -1,5 +1,6 @@
 #include "container.h"
 
+#include "core/player.h"
 #include "page.h"
 #include "core/controls.h"
 #include "core/core.h"
@@ -144,8 +145,20 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
         if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_S)){
             ARC_String *url;
             ARC_String_CreateWithStrlen(&url, "https://youtu.be/1P5BSm_oFJg");
-            HUSBANDO_Core_ControlsInitFn(husbando_core, url, ARC_True);
+            HUSBANDO_Core_ControlsInit(husbando_core, url, ARC_True);
             ARC_String_Destroy(url);
+        }
+
+        if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_H)){
+            HUSBANDO_Core_ControlsSeekLeft(husbando_core);
+        }
+
+        if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_L)){
+            HUSBANDO_Core_ControlsSeekRight(husbando_core);
+        }
+
+        if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_P)){
+            HUSBANDO_Core_ControlsPlay(husbando_core);
         }
 
         pthread_mutex_lock(&(container->bufferMutex));
