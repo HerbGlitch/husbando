@@ -1,5 +1,7 @@
 #include "base.h"
 
+#include "core/core.h"
+#include "core/controls.h"
 #include <stdlib.h>
 #include <time.h>
 #include <arc/console/view.h>
@@ -12,9 +14,7 @@ void HUSBANDO_TUIBase_Create(HUSBANDO_TUIBase **base, ARC_Rect bounds, char *tit
 
     ARC_ConsoleView_Create(&((*base)->view), bounds);
 
-    time_t timer;
-    time(&timer);
-    (*base)->currentTime = ARC_Time_CopyFromStructTmPtr(localtime(&timer));
+    (*base)->currentTime = (ARC_Time){ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     (*base)->fullTime = (ARC_Time){ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
     //draw the header
@@ -52,9 +52,9 @@ void HUSBANDO_TUIBase_Main(HUSBANDO_TUIBase *base){
     ARC_ConsoleView_RenderWCharAt(base->view, L'┬', (ARC_Point){ bounds.x + 16, bounds.y + 1 });
     ARC_ConsoleView_RenderWCharAt(base->view, L'┴', (ARC_Point){ bounds.x + 16, bounds.y + 3 });
 
-    time_t timer;
-    time(&timer);
-    base->currentTime = ARC_Time_CopyFromStructTmPtr(localtime(&timer));
+    //get the current player time and the full time
+    base->currentTime = HUSBANDO_Core_ControlsGetCurrentTime(husbando_core);
+    base->fullTime    = HUSBANDO_Core_ControlsGetFullTime(husbando_core);
 
     HUSBANDO_TUIBase_RenderARCTime(base, base->currentTime, (ARC_Point){ bounds.x + 18, bounds.y + 2 });
     ARC_ConsoleView_RenderCharAt(base->view, '/', (ARC_Point){ bounds.x + 26, bounds.y + 2 });
@@ -99,13 +99,18 @@ void HUSBANDO_TUIBase_PollIndex(HUSBANDO_TUIBase *base){
     ARC_Rect bounds = ARC_ConsoleView_GetBounds(base->view);
 
     ARC_Time oldCurrentTime = base->currentTime;
-    time_t timer;
-    time(&timer);
-    base->currentTime = ARC_Time_CopyFromStructTmPtr(localtime(&timer));
+    ARC_Time oldFullTime = base->fullTime;
+
+    //get the current player time and the full time
+    base->currentTime = HUSBANDO_Core_ControlsGetCurrentTime(husbando_core);
+    base->fullTime    = HUSBANDO_Core_ControlsGetFullTime(husbando_core);
 
     if(oldCurrentTime.seconds != base->currentTime.seconds){
         HUSBANDO_TUIBase_RenderARCTime(base, base->currentTime, (ARC_Point){ bounds.x + 18, bounds.y + 2 });
-        HUSBANDO_TUIBase_RenderARCTime(base, base->fullTime   , (ARC_Point){ bounds.x + 27, bounds.y + 2 });
+    }
+
+    if(oldFullTime.seconds != base->fullTime.seconds){
+        HUSBANDO_TUIBase_RenderARCTime(base, base->fullTime, (ARC_Point){ bounds.x + 27, bounds.y + 2 });
     }
 }
 

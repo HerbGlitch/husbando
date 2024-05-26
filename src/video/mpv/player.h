@@ -11,7 +11,22 @@ extern "C" {
 #endif
 
 //TODO: make this compatable with windows
-#define HUSBANDO_MPV_SOCKET_PATH "/tmp/mpvsocket"
+#define HUSBANDO_MPV_COMMAND_SOCKET_FLAG " --input-ipc-server="
+#define HUSBANDO_MPV_COMMAND_START       "mpv "
+#define HUSBANDO_MPV_COMMAND_END         " --no-terminal & disown"
+
+#define HUSBANDO_MPV_SSH_COMMAND_START "systemd-run --user --scope --unit=mpv-session --setenv=DISPLAY=:0 nohup setsid mpv "
+#define HUSBANDO_MPV_SSH_COMMAND_END   " --no-terminal > /dev/null 2>&1 &"
+
+/*
+ * @brief controls
+*/
+#define HUSBANDO_MPV_PLAYER_SHOW_TIME  "echo 'show-text ${playback-time}' | socat - "
+#define HUSBANDO_MPV_PLAYER_SEEK_RIGHT "echo 'seek 5' | socat - "
+#define HUSBANDO_MPV_PLAYER_SEEK_LEFT  "echo 'seek -5' | socat - "
+#define HUSBANDO_MPV_PLAYER_PLAY       "echo 'play' | socat - "
+#define HUSBANDO_MPV_PLAYER_PAUSE      "echo 'pause' | socat - "
+#define HUSBANDO_MPV_PLAYER_PLAY_PAUSE "echo 'cycle pause' | socat - "
 
 /**
  * @breif creates the core of husbando, will init a player as well as a ssh connect (if the config defaults to connect), also loads in notes
