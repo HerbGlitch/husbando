@@ -25,10 +25,14 @@ add_executable(husbando
     src/tui/pages/notes.c
 
     src/video/mpv/player.c
+
+    #inih stuff
+    lib/inih/ini.c
 )
 
 target_include_directories(husbando
     PRIVATE ${CMAKE_SOURCE_DIR}/src
+    lib/inih
 )
 
-target_link_libraries(husbando PUBLIC archeus_std inih)
+target_link_libraries(husbando PUBLIC archeus_std)

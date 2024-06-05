@@ -1,3 +1,6 @@
 [submodule "lib/arc"]
 	path = lib/arc
 	url = git@gitlab.com:Archeus_00/arc.git
+[submodule "lib/inih"]
+	path = lib/inih
+	url = https://github.com/benhoyt/inih.git

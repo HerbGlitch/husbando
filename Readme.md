@@ -19,5 +19,7 @@ cd ..
 
 # Dependencies //TODO: have sections for these for major linux distros
 libssh
+
 ncurses
-inih
+
+inih //this one is pulled as a submodule
