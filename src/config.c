@@ -5,7 +5,7 @@
 #include <string.h>
 
 HUSBANDO_Config husbando_config = {
-    { NULL, NULL, NULL }, //Main
+    { NULL, NULL, NULL, 0 }, //Main
     { 0 }, //Local
     { 0, NULL, NULL, NULL }, //Ssh
     { 0, 0, 1920, 1080 }, //Gui
@@ -73,6 +73,11 @@ int32_t HUSBANDO_Config_HandlerFn(void *user, const char *section, const char *n
 
     if(strcmp(section, "main") == 0 && strcmp(name, "videoPath") == 0){
         config->Main.videoPath = strdup(value);
+        return 1;
+    }
+
+    if(strcmp(section, "main") == 0 && strcmp(name, "sshOnInit") == 0){
+        config->Main.sshOnInit = atoi(value);
         return 1;
     }
 

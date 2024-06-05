@@ -2,7 +2,7 @@
 
 #include "core.h"
 
-void HUSBANDO_Core_ControlsInitFn(HUSBANDO_Core *core, ARC_String *url, ARC_Bool autoPlay){
+void HUSBANDO_Core_ControlsInit(HUSBANDO_Core *core, ARC_String *url, ARC_Bool autoPlay){
     if(core->playerId == HUSBANDO_CORE_VIDEO_PLAYER_NONE || core->player == NULL){
         //TODO: notify no player exists
         return;
@@ -11,7 +11,7 @@ void HUSBANDO_Core_ControlsInitFn(HUSBANDO_Core *core, ARC_String *url, ARC_Bool
     core->player->initFn(core, url, autoPlay);
 }
 
-void HUSBANDO_Core_ControlsPlayFn(HUSBANDO_Core *core){
+void HUSBANDO_Core_ControlsPlay(HUSBANDO_Core *core){
     if(core->playerId == HUSBANDO_CORE_VIDEO_PLAYER_NONE || core->player == NULL){
         //TODO: notify no player exists
         return;
@@ -20,7 +20,7 @@ void HUSBANDO_Core_ControlsPlayFn(HUSBANDO_Core *core){
     core->player->playFn(core);
 }
 
-void HUSBANDO_Core_ControlsPauseFn(HUSBANDO_Core *core){
+void HUSBANDO_Core_ControlsPause(HUSBANDO_Core *core){
     if(core->playerId == HUSBANDO_CORE_VIDEO_PLAYER_NONE || core->player == NULL){
         //TODO: notify no player exists
         return;

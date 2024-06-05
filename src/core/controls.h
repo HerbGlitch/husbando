@@ -18,21 +18,21 @@ extern "C" {
  * @param url      the url or path that holds the video
  * @param autoPlay starts playing the video right when init finishes, if ARC_False the video will start paused
 */
-void HUSBANDO_Core_ControlsInitFn(HUSBANDO_Core *core, ARC_String *url, ARC_Bool autoPlay);
+void HUSBANDO_Core_ControlsInit(HUSBANDO_Core *core, ARC_String *url, ARC_Bool autoPlay);
 
 /**
  * @breif will start playing a video if paused, or notifies if the player doesn't exist or there is no playing video
  *
  * @param core the type holding the videoData that will be used
 */
-void HUSBANDO_Core_ControlsPlayFn(HUSBANDO_Core *core);
+void HUSBANDO_Core_ControlsPlay(HUSBANDO_Core *core);
 
 /**
  * @breif will pause a playing video, or notifies if the player doesn't exist or there is no playing video
  *
  * @param core the type holding the videoData that will be used
 */
-void HUSBANDO_Core_ControlsPauseFn(HUSBANDO_Core *core);
+void HUSBANDO_Core_ControlsPause(HUSBANDO_Core *core);
 
 /**
  * @breif seeks the current video player right, or notifies if the player doesn't exist

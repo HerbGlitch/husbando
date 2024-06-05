@@ -15,6 +15,8 @@ typedef struct HUSBANDO_Config {
         const char *configPath;
         const char *filePath;
         const char *videoPath;
+
+        uint8_t sshOnInit;
     } Main;
 
     struct {
@@ -23,6 +25,7 @@ typedef struct HUSBANDO_Config {
 
     struct {
         uint32_t player;
+
         const char *hostname;
         const char *user;
         const char *password;
