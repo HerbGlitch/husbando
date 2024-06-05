@@ -110,3 +110,5 @@ _deps
 .ccls
 .cache
 .clangd.nvim
+
+ani-cli
