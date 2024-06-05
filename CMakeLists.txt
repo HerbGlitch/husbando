@@ -11,8 +11,6 @@ set(ARCHEUS_STD_SSH_BACKEND     "LIBSSH"  CACHE STRING "use libssh" )
 
 add_subdirectory(lib/arc)
 
-find_package(LIBSSH REQUIRED)
-
 add_executable(husbando
     src/config.c
     src/main.c
