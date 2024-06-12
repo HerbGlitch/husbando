@@ -1,3 +1,26 @@
+/* testing allanime */
+#include "provider/allanime/provider.h"
+#include <arc/std/string.h>
+
+int main(){
+    temp();
+    temp1();
+
+//    ARC_String *name;
+//    ARC_String_CreateWithStrlen(&name, "Kaguya-sama wa Kokurasetai: Tensai-tachi no Renai Zunousen");
+
+//    HUSBANDO_Allanime_GetEpisodeURLString(name, 1);
+
+//    HUSBANDO_Allanime_Search(name);
+
+//    ARC_String_Destroy(name);
+    return 0;
+}
+
+/* end testing */
+
+/* testing tui */
+/*
 #include "config.h"
 #include "core/core.h"
 #include "tui/container.h"
@@ -31,23 +54,5 @@ int main(int argc, char *argv[]){
     HUSBANDO_Config_Deinit();
     return 0;
 }
-
-//TODO: will remove this when it is implemented in the core
-// ARC_Ssh_ExecStrInNewSession(ssh, "export DISPLAY=:0 ; volume --inc");
-// ARC_Ssh_ExecStrInNewSession(ssh, "export DISPLAY=:0 ; volume --dec");
-// ARC_Ssh_ExecStrInNewSession(ssh, "sudo ydotool key 105:1 105:0");
-// ARC_Ssh_ExecStrInNewSession(ssh, "sudo ydotool key 106:1 106:0");
-// ARC_Ssh_ExecStrInNewSession(ssh, "sudo ydotool key 57:1 57:0");
-
-/*
-alias pspace='ydotool key 57:1 57:0'
-alias pright='ydotool key 106:1 106:0'
-alias pleft='ydotool key 105:1 105:0'
-alias pdesktop1='ydotool key 125:1 2:1 2:0 125:0'
-alias pdesktop2='ydotool key 125:1 3:1 3:0 125:0'
-alias pdesktop3='ydotool key 125:1 4:1 4:0 125:0'
-alias pdesktop4='ydotool key 125:1 5:1 5:0 125:0'
-alias pclose='ydotool key 125:1 46:1 46:0 125:0'
 */
-
-
+/* end testing*/

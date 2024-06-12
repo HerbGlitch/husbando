@@ -18,6 +18,8 @@ add_executable(husbando
     src/core/controls.c
     src/core/core.c
 
+    src/provider/allanime/provider.c
+
     src/tui/base.c
     src/tui/container.c
     src/tui/page.c
@@ -35,4 +37,4 @@ target_include_directories(husbando
     lib/inih
 )
 
-target_link_libraries(husbando PUBLIC archeus_std)
+target_link_libraries(husbando PUBLIC archeus_std curl)
