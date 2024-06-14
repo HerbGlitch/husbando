@@ -39,13 +39,6 @@ typedef struct HUSBANDO_ProviderShow {
     void *providerData;
 } HUSBANDO_ProviderShow;
 
-typedef struct HUSBANDO_ProiderEpisode {
-}
-
-typedef struct HUSBANDO_ProviderEpisode {
-
-} HUSBANDO_ProviderEpisode;
-
 //TODO: implement this
 //void HUSBANDO_CoreProvider_CreateAllanimeProvider(HUSBANDO_CoreProvider **provider);
 
