@@ -39,6 +39,9 @@ typedef struct HUSBANDO_ProviderShow {
     void *providerData;
 } HUSBANDO_ProviderShow;
 
+typedef struct HUSBANDO_ProiderEpisode {
+}
+
 typedef struct HUSBANDO_ProviderEpisode {
 
 } HUSBANDO_ProviderEpisode;
@@ -72,8 +75,21 @@ void HUSBANDO_Allanime_Search(ARC_String *name);
  * @breif searches all anime for a given show name
  *
  * @param name the name of the show to search
+ *
+ * @return a url on success, NULL on fail
 */
-void HUSBANDO_Allanime_GetEpisodeURLString(ARC_String *name, uint32_t episode);
+ARC_String *HUSBANDO_Allanime_GetEpisodeURL(ARC_String *name, uint32_t episode);
+
+/**
+ * @breif searches all anime for a given show name
+ *
+ * @note the returned HUSBANDO_ProviderEpisode needs to be deleted
+ *
+ * @param name the name of the show to search
+ *
+ * @return an episode that holds a url and ids of different resolutions for the episode or NULL on fail
+*/
+void HUSBANDO_Allanime_GetCurrentEpisodeURL(ARC_String *resolution);
 
 void temp();
 void temp1();

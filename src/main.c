@@ -1,10 +1,15 @@
 /* testing allanime */
 #include "provider/allanime/provider.h"
+#include <stdio.h>
 #include <arc/std/string.h>
 
 int main(){
     temp();
     temp1();
+
+//    ARC_String *tempCurlResponse;
+//    HUSBANDO_Allanime_GetCurlResponse(&tempCurlResponse, "https://allanime.day/apivtwo/clock.json?id=7d2473746a243c246e727276753c2929636b6472676d73287674692975727463676b6f686128766e76396f623b4b6c43714942473720726f726a633b44696d732d68692d4d696d6974692d68692d5f6764676f2d5f677275732d23343e42736423343f2d43766f756962632d3720727f76637573643b555344242a2475727463676b63744f62243c24706f62636975727463676b6f69242a2462677263243c24343634322b36302b373452363f3c373e3c3636283636365c247b&referer=");
+//    printf("\n\n%s\n\n", tempCurlResponse->data);
 
 //    ARC_String *name;
 //    ARC_String_CreateWithStrlen(&name, "Kaguya-sama wa Kokurasetai: Tensai-tachi no Renai Zunousen");

@@ -12,13 +12,15 @@ cd build
 cmake ..
 make
 
-#NOTE: this needs to be run from root
+#NOTE: this needs to be run from the root of the project
 cd ..
 ./build/husbando
 ```
 
 # Dependencies //TODO: have sections for these for major linux distros
 libssh
+
+libcurl
 
 ncurses
 

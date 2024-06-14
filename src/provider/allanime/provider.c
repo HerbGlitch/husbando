@@ -17,6 +17,51 @@ typedef struct HUSBANDO_AllanimeData {
 
 } HUSBANDO_AllanimeData;
 
+//TODO: move this
+typedef struct HUSBANDO_AllanimeSubstitue {
+    char hex[3];
+    char substitution;
+} HUSBANDO_AllanimeSubstitue;
+
+//TODO: move this, and probs add to header
+void HUSBANDO_Allanime_SubstitueId(ARC_String **outputId, ARC_String *inputId){
+    //set the substitution rules, based on ani-cli sed "'s/^01$/9/g;s/^08$/0/g;s/^05$/=/g;s/^0a$/2/g;s/^0b$/3/g;s/^0c$/4/g;s/^07$/?/g;s/^00$/8/g;s/^5c$/d/g;s/^0f$/7/g;s/^5e$/f/g;s/^17$/\//g;s/^54$/l/g;s/^09$/1/g;s/^48$/p/g;s/^4f$/w/g;s/^0e$/6/g;s/^5b$/c/g;s/^5d$/e/g;s/^0d$/5/g;s/^53$/k/g;s/^1e$/\&/g;s/^5a$/b/g;s/^59$/a/g;s/^4a$/r/g;s/^4c$/t/g;s/^4e$/v/g;s/^57$/o/g;s/^51$/i/g;'"
+    int32_t substitueRulesLength = 29;
+    HUSBANDO_AllanimeSubstitue substitueRules[] = {
+        {"01", '9'}, {"08", '0'}, {"05", '='}, {"0a", '2'}, {"0b", '3'},
+        {"0c", '4'}, {"07", '?'}, {"00", '8'}, {"5c", 'd'}, {"0f", '7'},
+        {"5e", 'f'}, {"17", '/'}, {"54", 'l'}, {"09", '1'}, {"48", 'p'},
+        {"4f", 'w'}, {"0e", '6'}, {"5b", 'c'}, {"5d", 'e'}, {"0d", '5'},
+        {"53", 'k'}, {"1e", '&'}, {"5a", 'b'}, {"59", 'a'}, {"4a", 'r'},
+        {"4c", 't'}, {"4e", 'v'}, {"57", 'o'}, {"51", 'i'}
+    };
+
+    //create the output string with the substitued size
+    *outputId = (ARC_String *)malloc(sizeof(ARC_String));
+    (*outputId)->length = (inputId->length / 2);
+    (*outputId)->data   = (char*)malloc((*outputId)->length + 1);
+
+    //need an extra value for the end string '\0' for strcmp to work
+    char hex[3] = {0};
+    for(uint32_t inputIndex = 0, outputIndex = 0; inputIndex < inputId->length; inputIndex += 2, outputIndex++) {
+        hex[0] = inputId->data[inputIndex];
+        hex[1] = inputId->data[inputIndex + 1];
+
+        //default to '?' if no match is found
+        (*outputId)->data[outputIndex] = '?';
+
+        //find matching rule if it exists
+        for(int ruleIndex = 0; ruleIndex < substitueRulesLength; ruleIndex++) {
+            if(strcmp(hex, substitueRules[ruleIndex].hex) == 0) {
+                (*outputId)->data[outputIndex] = substitueRules[ruleIndex].substitution;
+                break;
+            }
+        }
+    }
+
+    (*outputId)->data[(*outputId)->length] = '\0';
+}
+
 // this is a private function that takes a curl response and appends it to a string, according to curl size is allways 1 https://curl.se/libcurl/c/CURLOPT_WRITEFUNCTION.html
 size_t HUSBANDO_Allanime_CurlWriteToString(void *curlData, uint64_t size, uint64_t curlDataSize, ARC_String *string){
     uint64_t newLength = string->length + (size * curlDataSize);
@@ -113,13 +158,13 @@ void HUSBANDO_Allanime_Search(ARC_String *name){
     if(startBracketIndex == ~(uint64_t)0 || endBracketIndex == ~(uint64_t)0){
         //could not find array in json of ids
         arc_errno = ARC_ERRNO_DATA;
-        ARC_DEBUG_ERR("in temp(), couldn't find array in json, so probably malformed data");
+        ARC_DEBUG_ERR("in HUSBANDO_Allanime_Search(name), couldn't find array in json, so probably malformed data");
         return;
     }
 
     if(startBracketIndex >= endBracketIndex){
         arc_errno = ARC_ERRNO_DATA;
-        ARC_DEBUG_ERR("in temp(), start bracked found after end bracket");
+        ARC_DEBUG_ERR("in HUSBANDO_Allanime_Search(name), start bracked found after end bracket");
         return;
     }
 
@@ -495,6 +540,10 @@ void temp1(){
     ARC_String *currentString;
     ARC_String_CopySubstring(&currentString, curlResponse, startBracketIndex, endBracketIndex - startBracketIndex - 1);
 
+    //stor ids for later
+    ARC_Vector *providerIds;
+    ARC_Vector_Create(&providerIds);
+
     while(currentString != NULL){
         //NOTE: don't need to check ARC string find functions for errors as currentString and cstring will never be NULL
         uint64_t startLabelStringIndex = ARC_String_FindCStringWithStrlen(currentString, "\"");
@@ -544,23 +593,54 @@ void temp1(){
             currentString = NULL;
         }
 
-        printf("LABEL: %s, KEY: %s\n", labelString->data, keyString->data);
-
         //set the id
-//        if(ARC_String_EqualsCStringWithStrlen(labelString, "_id")){
-//            ARC_String *tempString = keyString;
-//            ARC_String_StripEnds(&keyString, tempString, '"');
-//
+        if(ARC_String_EqualsCStringWithStrlen(labelString, "sourceUrl")){
+            ARC_String *tempString = keyString;
+            ARC_String_StripEnds(&keyString, tempString, '"');
+
+            //two dashes, -- in source url
+            if(keyString->length >= 3 && keyString->data[0] == '-' && keyString->data[1] == '-'){
+                ARC_String *tempString = keyString;
+                ARC_String_CopySubstring(&keyString, tempString, 2, tempString->length - 2);
+                ARC_String_Destroy(tempString);
+
+                ARC_String *showId;
+                HUSBANDO_Allanime_SubstitueId(&showId, keyString);
+
+                ARC_String_ReplaceMatchingCStringWithStrlen(&showId, "/clock", "/clock.json");
+
+                if(showId->data[0] != '?'){
+                    ARC_Vector_Add(providerIds, (void *)showId);
+                }
+                else {
+                    ARC_String_Destroy(showId);
+                }
+            }
+
 //            //cleanup
 //            //NOTE: key does not need to be cleaned up here because it is stored in providerShow, providerShow needs to clean it up
-//            ARC_String_Destroy(tempString);
-//            ARC_String_Destroy(labelString);
-//            continue;
-//        }
+            ARC_String_Destroy(tempString);
+            ARC_String_Destroy(labelString);
+            continue;
+        }
 
         ARC_String_Destroy(labelString);
         ARC_String_Destroy(keyString);
     }
+
+    for(uint32_t i = 0; i < ARC_Vector_Size(providerIds); i++){
+        ARC_String *providerId = (ARC_String *)ARC_Vector_Get(providerIds, i);
+        printf("ID: %s\n", providerId->data);
+    }
+
+    ARC_String *providerId = (ARC_String *)ARC_Vector_Get(providerIds, 0);
+
+    ARC_String *tempCurlResponse;
+    char tempUrl[strlen("https://" HUSBANDO_ALLANIME_BASE) + providerId->length + 1];
+    sprintf(tempUrl, "%s%s", "https://" HUSBANDO_ALLANIME_BASE, providerId->data);
+    tempUrl[strlen("https://" HUSBANDO_ALLANIME_BASE) + providerId->length] = '\0';
+    HUSBANDO_Allanime_GetCurlResponse(&tempCurlResponse, tempUrl);
+    printf("\n\n%s\n\n", tempCurlResponse->data);
 
     //cleanup
     if(currentString != NULL){
