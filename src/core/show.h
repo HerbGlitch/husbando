@@ -49,6 +49,8 @@ typedef struct HUSBANDO_CoreProviderEpisode {
     ARC_String *title;
     ARC_String *url;
     uint32_t currentEpisode;
+
+    void *providerData;
 } HUSBANDO_CoreProviderEpisode;
 
 #ifdef __cplusplus

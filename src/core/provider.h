@@ -3,6 +3,7 @@
 
 #include "show.h"
 #include <stdint.h>
+#include <arc/std/bool.h>
 #include <arc/std/string.h>
 #include <arc/std/vector.h>
 
@@ -19,13 +20,15 @@ typedef struct HUSBANDO_CoreProvider HUSBANDO_CoreProvider;
  * @breif searches a provider for a show matching a name (partial or full)
  *
  * @note each HUSBANDO_CoreProviderShow in the returned vector and the returned vector iself needs to be freed
+ * @note allowing adult content will be pulled from the main config
  *
- * @param provider a reference to the provider to allow storing of data
- * @param name     the name of the show to search for
+ * @param provider   a reference to the provider to allow storing of data
+ * @param name       the name of the show to search for
+ * @param language   the language (Exmple: sub, dub) to get the show in, Look at the provider for what options this parameter can take
  *
  * @return a vector of HUSBANOD_CoreProviderShow types on success, or NULL on failure
 */
-typedef ARC_Vector *(* HUSBANDO_CoreProvider_SearchFn)(HUSBANDO_CoreProvider *provider, ARC_String *name);
+typedef ARC_Vector *(* HUSBANDO_CoreProvider_SearchFn)(HUSBANDO_CoreProvider *provider, ARC_String *name, ARC_String *language);
 
 /**
  * @breif gets the details and url of a show at an episode

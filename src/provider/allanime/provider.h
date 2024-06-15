@@ -5,13 +5,12 @@
 extern "C" {
 #endif
 
+#include "core/provider.h"
 #include <arc/std/string.h>
-/*
- * @NOTE: this file has a fair ammount of temprorary things
-*/
+#include <arc/std/vector.h>
 
 /*
- * @brief provider details
+ * @brief allanime provider details
  *
  * @note this info can be found in https://github.com/pystardust/ani-cli
 */
@@ -25,12 +24,12 @@ extern "C" {
  *
  * @note this info can be found in https://github.com/pystardust/ani-cli
 */
-#define HUSBANDO_ALLANIME_SEARCH_QUERY           "query(        $search: SearchInput        $limit: Int        $page: Int        $translationType: VaildTranslationTypeEnumType        $countryOrigin: VaildCountryOriginEnumType    ) {    shows(        search: $search        limit: $limit        page: $page        translationType: $translationType        countryOrigin: $countryOrigin    ) {        edges {            _id name availableEpisodes __typename       }    }}"
-#define HUSBANDO_ALLANIME_SEARCH_VARIABLES_START "{\"search\":{\"allowAdult\":false,\"allowUnknown\":false,\"query\":\""
-#define HUSBANDO_ALLANIME_SEARCH_VARIABLES_END   "\"},\"limit\":40,\"page\":1,\"translationType\":\"dub\",\"countryOrigin\":\"ALL\"}"
 
 #define HUSBANDO_ALLANIME_EPISODE_QUERY "query ($showId: String!, $translationType: VaildTranslationTypeEnumType!, $episodeString: String!) {    episode(        showId: $showId        translationType: $translationType        episodeString: $episodeString    ) {        episodeString sourceUrls    }}"
 
+/**
+ * @breif
+*/
 typedef struct HUSBANDO_ProviderShow {
     ARC_String *name;
     uint32_t subEpisodesCount;
@@ -39,11 +38,19 @@ typedef struct HUSBANDO_ProviderShow {
     void *providerData;
 } HUSBANDO_ProviderShow;
 
-//TODO: implement this
-//void HUSBANDO_CoreProvider_CreateAllanimeProvider(HUSBANDO_CoreProvider **provider);
+/**
+ * @breif creates a husbando core provider type filled with allanime functions
+ *
+ * @param provider the parameter to store the allanime provider in
+*/
+void HUSBANDO_CoreProvider_CreateAllanimeProvider(HUSBANDO_CoreProvider **provider);
 
-//TODO: implement this
-//void HUSBANDO_CoreProvider_DestroyAllanimeProvider(HUSBANDO_CoreProvider *provider);
+/**
+ * @breif destroys a husbando core provider type and cleans up allanime stored data
+ *
+ * @param provider the parameter to destroy the allanime provider in
+*/
+void HUSBANDO_CoreProvider_DestroyAllanimeProvider(HUSBANDO_CoreProvider *provider);
 
 /**
  * @breif will try to get a curl repsonse to allanime from a given url
@@ -58,20 +65,33 @@ typedef struct HUSBANDO_ProviderShow {
 void HUSBANDO_Allanime_GetCurlResponse(ARC_String **responseString, char *url);
 
 /**
- * @breif searches all anime for a given show name
+ * @breif searches a provider for a show matching a name (partial or full) with allanime
  *
- * @param name the name of the show to search
+ * @note this function matches HUSBANDO_CoreProivder_SearchFn
+ * @note each HUSBANDO_CoreProviderShow in the returned vector and the returned vector iself needs to be freed
+ * @note allowing adult content will be pulled from the main config
+ *
+ * @param provider   a reference to the provider to allow storing of data
+ * @param name       the name of the show to search for
+ * @param language   the language, either "sub" or "dub"
+ *
+ * @return a vector of HUSBANOD_CoreProviderShow types on success, or NULL on failure
 */
-void HUSBANDO_Allanime_Search(ARC_String *name);
+ARC_Vector *HUSBANDO_Allanime_Search(HUSBANDO_CoreProvider *provider, ARC_String *name, ARC_String *language);
 
 /**
- * @breif searches all anime for a given show name
+ * @breif gets the details and url of a show at an episode
  *
- * @param name the name of the show to search
+ * @note this function matches HUSBANDO_CoreProivder_GetEpisodeFn
+ * @note returned value needs to be freed if it is not NULL
  *
- * @return a url on success, NULL on fail
+ * @param provider a reference to the provider to allow storing of data
+ * @param show     the show to get the episode from
+ * @param episode  the episode to get the details of
+ *
+ * @return the episode and its details on success, or NULL on failure
 */
-ARC_String *HUSBANDO_Allanime_GetEpisodeURL(ARC_String *name, uint32_t episode);
+HUSBANDO_CoreProviderEpisode *HUSBANDO_Allanime_GetEpisode(HUSBANDO_CoreProvider *provider, HUSBANDO_CoreProviderShow *show, uint32_t episode);
 
 /**
  * @breif searches all anime for a given show name
@@ -84,7 +104,14 @@ ARC_String *HUSBANDO_Allanime_GetEpisodeURL(ARC_String *name, uint32_t episode);
 */
 void HUSBANDO_Allanime_GetCurrentEpisodeURL(ARC_String *resolution);
 
-void temp();
+/**
+ * @breif
+ *
+ * @param outputId
+ * @param inputId
+*/
+void HUSBANDO_Allanime_SubstitueId(ARC_String **outputId, ARC_String *inputId);
+
 void temp1();
 
 #ifdef __cplusplus
