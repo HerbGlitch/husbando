@@ -7,7 +7,7 @@
 #include <arc/std/string.h>
 #include <arc/std/vector.h>
 
-int main(){
+int main(int32_t argc, char **argv){
     HUSBANDO_CoreProvider *provider;
     HUSBANDO_CoreProvider_CreateAllanimeProvider(&provider);
 
@@ -18,6 +18,8 @@ int main(){
     ARC_String_CreateWithStrlen(&language, "dub");
 
     ARC_Vector *shows = provider->searchFn(provider, name, language);
+    HUSBANDO_CoreProviderEpisode *episode = provider->getEpisodeFn(provider, (HUSBANDO_CoreProviderShow *)ARC_Vector_Get(shows, 0), 1);
+
     for(uint32_t i = 0; i < ARC_Vector_Size(shows); i++){
         HUSBANDO_CoreProviderShow *show = (HUSBANDO_CoreProviderShow *)ARC_Vector_Get(shows, i);
         printf("%s\n", show->name->data);
@@ -32,6 +34,10 @@ int main(){
     ARC_String_Destroy(language);
 
     HUSBANDO_CoreProvider_DestroyAllanimeProvider(provider);
+
+    printf("url: %s\n", episode->url->data);
+    ARC_String_Destroy(episode->url);
+    free(episode);
 //    temp1();
 
 //    ARC_String *tempCurlResponse;

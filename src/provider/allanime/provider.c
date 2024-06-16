@@ -1,5 +1,6 @@
 #include "provider.h"
 #include "core/provider.h"
+#include "core/show.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -16,7 +17,8 @@ ARC_Vector *providerShows;
 
 void HUSBANDO_CoreProvider_CreateAllanimeProvider(HUSBANDO_CoreProvider **provider){
     *provider = (HUSBANDO_CoreProvider *)malloc(sizeof(HUSBANDO_CoreProvider));
-    (*provider)->searchFn = HUSBANDO_Allanime_Search;
+    (*provider)->searchFn     = HUSBANDO_Allanime_Search;
+    (*provider)->getEpisodeFn = HUSBANDO_Allanime_GetEpisode;
 }
 
 void HUSBANDO_CoreProvider_DestroyAllanimeProvider(HUSBANDO_CoreProvider *provider){
@@ -288,7 +290,7 @@ ARC_Vector *HUSBANDO_Allanime_Search(HUSBANDO_CoreProvider *provider, ARC_String
     return providerShows;
 }
 
-HUSBANDO_CoreProviderEpisode *HUSBANDO_Allanime_GetEpisode(HUSBANDO_CoreProvider *provider, HUSBANDO_CoreProviderShow *show, uint32_t episode){
+HUSBANDO_CoreProviderEpisode *HUSBANDO_Allanime_GetEpisode(HUSBANDO_CoreProvider *provider, HUSBANDO_CoreProviderShow *show, uint32_t episodeNumber){
     //note: this info can be found in https://github.com/pystardust/ani-cli
     const char *queryCString = "query ($showId: String!, $translationType: VaildTranslationTypeEnumType!, $episodeString: String!) {    episode(        showId: $showId        translationType: $translationType        episodeString: $episodeString    ) {        episodeString sourceUrls    }}";
     const char *variablesCString = "{\"showId\":\"%s\",\"translationType\":\"%s\",\"episodeString\":\"%d\"}";
@@ -297,7 +299,7 @@ HUSBANDO_CoreProviderEpisode *HUSBANDO_Allanime_GetEpisode(HUSBANDO_CoreProvider
     //note: max value of a uint32_t is 4294967295 which is 10 digits in length, so + 10
     uint64_t variablesLength = strlen(variablesCString) + show->providerId->length + show->language->length + 10;
     char variables[variablesLength + 1];
-    sprintf(variables, variablesCString, show->providerId->data, show->language->data, episode);
+    sprintf(variables, variablesCString, show->providerId->data, show->language->data, episodeNumber);
     variables[variablesLength] = '\0';
 
     //init curl to encode strings
@@ -322,7 +324,9 @@ HUSBANDO_CoreProviderEpisode *HUSBANDO_Allanime_GetEpisode(HUSBANDO_CoreProvider
 
     //call the search function
     ARC_String *curlResponse;
-    HUSBANDO_Allanime_GetCurlResponse(&curlResponse, url);
+//    HUSBANDO_Allanime_GetCurlResponse(&curlResponse, url);
+    ARC_String_CreateWithStrlen(&curlResponse, "{\"data\":{\"episode\":{\"episodeString\":\"1\",\"sourceUrls\":[{\"sourceUrl\":\"--175948514e4c4f57175b54575b5307515c050f5c0a0c0f0b0f0c0e590a0c0b5b0a0c0a010e5a0e0b0e0a0e5e0e0f0b090a010f080e5e0e0a0e0b0e010f0d0a010d0a0e0b0e010d0a0f0c0f5d0c0d0f0d0c000b5e0d5e0b0a0e5e0e000d0d0f0b0e090a010e0a0f0b0e0c0a010b0f0a0c0a590a0c0f0d0f0a0f0c0e0b0e0f0e5a0e0b0f0c0c5e0e0a0a0c0b5b0a0c0c0a0f0c0e010f0e0e0c0e010f5d0a0c0a590a0c0e0a0e0f0f0a0e0b0a0c0b5b0a0c0b0c0b0e0b0c0b0a0a5a0b0e0b080a5a0b0f0b080d0a0b0e0b5d0b5b0b0d0b0b0b5b0b0e0b0e0a000b0e0b0e0b0e0d5b0a0c0a590a0c0f0a0f0c0e0f0e000f0d0e590e0f0f0a0e5e0e010e000d0a0f5e0f0e0e0b0a0c0b5b0a0c0e0a0f0b0e0c0a0c0a590a0c0e5c0e0b0f5e0a0c0b5b0a0c0e0b0f0e0a5a0a010e5a0e0b0e0a0e5e0e0f0b090a010f080e5e0e0a0e0b0e010f0d0a010d0a0e0b0e010d0a0f0c0f5d0c0d0f0d0c000b5e0d5e0b0a0e5e0e000d0d0f0b0e090a010e0a0f0b0e0c0a010b0f0a0c0f5a\",\"priority\":7,\"sourceName\":\"Sak\",\"type\":\"iframe\",\"className\":\"\",\"streamerId\":\"allanime\"},{\"sourceUrl\":\"--504c4c484b0217174c5757544b165e594b4c0c4b485d5d5c164a4b4e481717555d5c51590f174e515c5d574b176c5d576c4a407b4b7601610c51566b4d5f175c4d5a1709\",\"priority\":7.9,\"sourceName\":\"Yt-mp4\",\"type\":\"player\",\"className\":\"\",\"streamerId\":\"allanime\"},{\"sourceUrl\":\"https://ok.ru/videoembed/7007405607570\",\"priority\":3.5,\"sourceName\":\"Ok\",\"type\":\"iframe\",\"sandbox\":\"allow-forms allow-scripts allow-same-origin\",\"className\":\"text-info\",\"streamerId\":\"allanime\"},{\"sourceUrl\":\"https://mp4upload.com/embed-rqk6qu5el4n8.html\",\"priority\":4,\"sourceName\":\"Mp4\",\"type\":\"iframe\",\"sandbox\":\"allow-forms allow-scripts allow-same-origin\",\"className\":\"\",\"streamerId\":\"allanime\"},{\"sourceUrl\":\"https://streamwish.to/e/wd120xpg66a4\",\"priority\":5.5,\"sourceName\":\"Sw\",\"type\":\"iframe\",\"className\":\"text-danger\",\"streamerId\":\"allanime\"},{\"sourceUrl\":\"https://filemoon.to/e/n07ojpg7tbds.html\",\"priority\":5.5,\"sourceName\":\"Fm-Hls\",\"type\":\"iframe\",\"className\":\"text-danger\",\"streamerId\":\"allanime\",\"downloads\":{\"sourceName\":\"Filemoon\",\"downloadUrl\":\"https://filemoon.to/d/n07ojpg7tbds.html&sandbox=allow-forms%20allow-scripts%20allow-same-origin%20allow-downloads\"}},{\"sourceUrl\":\"--175948514e4c4f57175b54575b5307515c050f5c0a0c0f0b0f0c0e590a0c0b5b0a0c0a010f0d0e5e0f0a0e0b0f0d0a010e0d0e5d0e0f0f0c0f0a0e590e010f0b0f0d0f0a0f5e0a010e0f0e000e5e0e5a0e0b0a010d0a0e0b0e010d0a0f0c0f5d0c0d0f0d0c000b5e0d5e0b0a0e5e0e000d0d0f0b0e090d010b0f0d010e0a0f0b0e0c0a000e5a0f0e0b0a0a0c0a590a0c0f0d0f0a0f0c0e0b0e0f0e5a0e0b0f0c0c5e0e0a0a0c0b5b0a0c0d0d0e5d0e0f0f0c0e0b0f0e0e010e5e0e000f0a0a0c0a590a0c0e0a0e0f0f0a0e0b0a0c0b5b0a0c0b0c0b0e0b0c0b0a0a5a0b0e0b080a5a0b0f0b080d0a0b0e0b5d0b5b0b0d0b0b0b5b0b0e0b0e0a000b0e0b0e0b0e0d5b0a0c0a590a0c0f0a0f0c0e0f0e000f0d0e590e0f0f0a0e5e0e010e000d0a0f5e0f0e0e0b0a0c0b5b0a0c0e0a0f0b0e0c0a0c0a590a0c0e5c0e0b0f5e0a0c0b5b0a0c0e0b0f0e0a5a0d0a0e0b0e010d0a0f0c0f5d0c0d0f0d0c000b5e0d5e0b0a0e5e0e000d0d0f0b0e090d010b0f0d010e0a0f0b0e0c0a0c0f5a\",\"priority\":7.4,\"sourceName\":\"S-mp4\",\"type\":\"iframe\",\"className\":\"\",\"streamerId\":\"allanime\",\"downloads\":{\"sourceName\":\"S-mp4\",\"downloadUrl\":\"https://blog.allanime.day/apivtwo/clock/download?id=7d2473746a243c2429756f72637529656e6774726a697375727f2967686f6b632952636952747e4575483f5f326f68557361593759627364286b7632242a2475727463676b63744f62243c24556e67746376696f6872242a2462677263243c24343634322b36302b373052363e3c35333c3636283636365c242a24626971686a696762243c727473637b\"}},{\"sourceUrl\":\"--175948514e4c4f57175b54575b5307515c050f5c0a0c0f0b0f0c0e590a0c0b5b0a0c0e5d0f0a0f0a0f0e0f0d0b5b0a010a010e0b0e5a0e0c0f0a0e0f0e5c0f0b0a000f0e0f0c0e010a010f0d0f0a0f0c0e0b0e0f0e5a0e5e0e000e090a000f0e0e5d0f0e0b010e5e0e0a0b5a0c5a0e5b0c0b0f5e0c000f5b0e0d0f5b0a080f0a0e5e0f0a0e590e0b0b5a0c5c0e0f0e090f0b0f5e0e0f0a5a0f0d0e0f0e5a0e0f0a5c0f090e0f0a5c0c5c0e010e5c0f0b0f0c0e0f0f0d0e0b0f0a0e0f0e5e0a0b0b0d0c0f0a5c0c080e5e0f0c0f0d0f0a0a5c0c5c0e5e0f0d0f0d0a5c0f090e0f0a5c0c010f090e0f0f0c0e0f0e000e0f0e5e0a5c0a0b0b0c0b5d0c0a0f0b0e0c0a0b0b0c0b5e0a5c0c0b0f0e0e5e0f0d0e010e0a0e0b0a5c0b0f0a080f0a0f5e0f0e0e0b0f0d0f0b0e0c0b5a0d0d0d0b0c0c0a0c0a590a0c0f0d0f0a0f0c0e0b0e0f0e5a0e0b0f0c0c5e0e0a0a0c0b5b0a0c0f080e5e0e0a0e0b0e010f0d0f0a0f0c0e0b0e0f0e5a0e5e0e010a0c0a590a0c0e0a0e0f0f0a0e0b0a0c0b5b0a0c0b0c0b0e0b0c0b0a0a5a0b0e0b080a5a0b0f0b080d0a0b0e0b5d0b5b0b0d0b0b0b5b0b0e0b0e0a000b0e0b0e0b0e0d5b0a0c0f5a1e4a5d5e5d4a5d4a05\",\"priority\":7.7,\"sourceName\":\"Luf-mp4\",\"type\":\"iframe\",\"className\":\"\",\"streamerId\":\"allanime\"},{\"sourceUrl\":\"https://embtaku.pro/streaming.php?id=MjEyNzcz&title=Kaguya-sama+wa+Kokurasetai%3A+First+Kiss+wa+Owaranai+%28Dub%29+Episode+1&typesub=SUB\",\"priority\":4,\"sourceName\":\"Vid-mp4\",\"type\":\"iframe\",\"className\":\"\",\"streamerId\":\"allanime\",\"downloads\":{\"sourceName\":\"Gl\",\"downloadUrl\":\"https://embtaku.pro/download?id=MjEyNzcz&title=Kaguya-sama+wa+Kokurasetai%3A+First+Kiss+wa+Owaranai+%28Dub%29+Episode+1&typesub=SUB&sandbox=allow-forms%20allow-scripts%20allow-same-origin%20allow-downloads\"}}]}}}");
+    printf("Data: \n\n%s\n\n", curlResponse->data);
 
     //NOTE: don't need to check ARC string find functions for errors as curlResponse and cstring will never be NULL
     uint64_t startBracketIndex = ARC_String_FindCStringWithStrlen(curlResponse, "[");
@@ -347,6 +351,8 @@ HUSBANDO_CoreProviderEpisode *HUSBANDO_Allanime_GetEpisode(HUSBANDO_CoreProvider
     //stor ids for later
     ARC_Vector *providerIds;
     ARC_Vector_Create(&providerIds);
+    HUSBANDO_CoreProviderEpisode *episode = (HUSBANDO_CoreProviderEpisode *)malloc(sizeof(HUSBANDO_CoreProviderEpisode));
+    episode->currentEpisode = episodeNumber;
 
     while(currentString != NULL){
         //NOTE: don't need to check ARC string find functions for errors as currentString and cstring will never be NULL
@@ -443,8 +449,10 @@ HUSBANDO_CoreProviderEpisode *HUSBANDO_Allanime_GetEpisode(HUSBANDO_CoreProvider
     char tempUrl[strlen("https://" HUSBANDO_ALLANIME_BASE) + providerId->length + 1];
     sprintf(tempUrl, "%s%s", "https://" HUSBANDO_ALLANIME_BASE, providerId->data);
     tempUrl[strlen("https://" HUSBANDO_ALLANIME_BASE) + providerId->length] = '\0';
-    HUSBANDO_Allanime_GetCurlResponse(&tempCurlResponse, tempUrl);
-    printf("\n\n%s\n\n", tempCurlResponse->data);
+//    HUSBANDO_Allanime_GetCurlResponse(&tempCurlResponse, tempUrl);
+    ARC_String_CreateWithStrlen(&tempCurlResponse, "{\"links\":[{\"link\":\"https://uc435d7659ba777202a805d94d43.dl.dropboxusercontent.com/cd/0/get/CU4cLO0ZR48dhaIOxyyGknh2r7T_itQMKGFwsyYjiilE0_-l9LSIqIC5HhUEO10maCb1OkACB3cDJLf_FAo7Nx0eVk6yg9rT_5Ntl63AncYxE2kpClsn6Squ_fOMbgeqH-kSOvdphjGQDz3tQBogvdRCsRt1WoVqhxbMT5jGGYF79w/file\",\"mp4\":true,\"resolutionStr\":\"Mp4\",\"src\":\"https://uc435d7659ba777202a805d94d43.dl.dropboxusercontent.com/cd/0/get/CU4cLO0ZR48dhaIOxyyGknh2r7T_itQMKGFwsyYjiilE0_-l9LSIqIC5HhUEO10maCb1OkACB3cDJLf_FAo7Nx0eVk6yg9rT_5Ntl63AncYxE2kpClsn6Squ_fOMbgeqH-kSOvdphjGQDz3tQBogvdRCsRt1WoVqhxbMT5jGGYF79w/file\",\"fromCache\":\"2024-06-16T08:35:44.240Z\"}]}");
+
+    episode->url = tempCurlResponse;
 
     //cleanup
     if(currentString != NULL){
@@ -452,140 +460,7 @@ HUSBANDO_CoreProviderEpisode *HUSBANDO_Allanime_GetEpisode(HUSBANDO_CoreProvider
     }
     ARC_String_Destroy(curlResponse);
 
-    return NULL;
-}
-
-void temp1(){
-    ARC_String *curlResponse;
-    ARC_String_CreateWithStrlen(&curlResponse, "{\"data\":{\"episode\":{\"episodeString\":\"1\",\"sourceUrls\":[{\"sourceUrl\":\"--175948514e4c4f57175b54575b5307515c050f5c0a0c0f0b0f0c0e590a0c0b5b0a0c0e5d0f0a0f0a0f0e0f0d0b5b0a010a010e0b0e5a0e0c0f0a0e0f0e5c0f0b0a000f0e0f0c0e010a010f0d0f0a0f0c0e0b0e0f0e5a0e5e0e000e090a000f0e0e5d0f0e0b010e5e0e0a0b5a0c5a0d0a0d0b0b0e0c5a0f5b0c0b0b0f0a080f0a0e5e0f0a0e590e0b0b5a0c5c0e0f0e090f0b0f5e0e0f0a5a0f0d0e0f0e5a0e0f0a5c0f090e0f0a5c0c5c0e010e5c0f0b0f0c0e0f0f0d0e0b0f0a0e0f0e5e0a0b0b0d0c0f0a5c0d0a0e0b0e000f0d0e0f0e5e0a5a0f0a0e0f0e0d0e5d0e5e0a5c0e000e010a5c0d0c0e0b0e000e0f0e5e0a5c0d5b0f0b0e000e010f0b0f0d0e0b0e000a5c0a0b0b0c0b5d0c0a0f0b0e0c0a0b0b0c0b5e0a080f0a0f5e0f0e0e0b0f0d0f0b0e0c0b5a0d0d0d0b0c0c0a080f0d0f0b0e0c0b5a0a080e0d0e010f080e0b0f0c0b5a0d5e0b0c0b5e0b0c0d5b0d5d0c5e0f080e0f0b0c0c080e000e0a0d5d0e590e5d0c590d5d0c000e5d0e0c0d090c0b0f0a0e0a0b0c0c0b0f0a0e0f0b0c0b5e0f0c0e0a0d5d0c5b0e5d0e0d0b0c0d080b0e0d5e0d090e5c0f0a0e0a0c090d080f0b0e0d0b0c0c080f0e0c590d5d0d0c0e5d0d5e0b0c0e5d0f0e0c590d090b0b0f080c590d5d0c5b0e590e0c0e5a0c080f0e0c590d5d0f0e0b0f0e0c0e5a0b5e0b0f0e0d0b0c0d080f0b0c590d090d0c0b0f0d5e0e5e0b0b0f090e0c0e5a0e0d0b5a0a0c0a590a0c0f0d0f0a0f0c0e0b0e0f0e5a0e0b0f0c0c5e0e0a0a0c0b5b0a0c0f080e5e0e0a0e0b0e010f0d0f0a0f0c0e0b0e0f0e5a0e5e0e010a0c0a590a0c0e0a0e0f0f0a0e0b0a0c0b5b0a0c0b0c0b0e0b0c0b0a0a5a0b0e0b080a5a0b0f0b0c0d0a0b0e0b0b0b5b0b0b0b0a0b5b0b0e0b0e0a000b0e0b0e0b0e0d5b0a0c0f5a1e4a5d5e5d4a5d4a05\",\"priority\":7.7,\"sourceName\":\"Luf-mp4\",\"type\":\"iframe\",\"className\":\"\",\"streamerId\":\"allanime\"},{\"sourceUrl\":\"https://embtaku.pro/streaming.php?id=MTU0MzE1&title=Kaguya-sama+wa+Kokurasetai%3A+Tensai-tachi+no+Renai+Zunousen+%28Dub%29&typesub=SUB&sub=&cover=Y292ZXIva2FndXlhLXNhbWEtd2Eta29rdXJhc2V0YWktdGVuc2FpLXRhY2hpLW5vLXJlbmFpLXp1bm91c2VuLWR1Yi5wbmc=\",\"priority\":4,\"sourceName\":\"Vid-mp4\",\"type\":\"iframe\",\"className\":\"\",\"streamerId\":\"allanime\",\"downloads\":{\"sourceName\":\"Gl\",\"downloadUrl\":\"https://embtaku.pro/download?id=MTU0MzE1&title=Kaguya-sama+wa+Kokurasetai%3A+Tensai-tachi+no+Renai+Zunousen+%28Dub%29&typesub=SUB&sub=&cover=Y292ZXIva2FndXlhLXNhbWEtd2Eta29rdXJhc2V0YWktdGVuc2FpLXRhY2hpLW5vLXJlbmFpLXp1bm91c2VuLWR1Yi5wbmc=&sandbox=allow-forms%20allow-scripts%20allow-same-origin%20allow-downloads\"}},{\"sourceUrl\":\"--175948514e4c4f57175b54575b5307515c050f5c0a0c0f0b0f0c0e590a0c0b5b0a0c0a010f080e5e0e0a0e0b0e010f0d0a010c0c0e080b090e080c0c0f5b0e090f090e010f080e0f0c090c090e5c0f0e0b0a0c090a010e0a0f0b0e0c0a010b0f0a0c0a590a0c0f0d0f0a0f0c0e0b0e0f0e5a0e0b0f0c0c5e0e0a0a0c0b5b0a0c0c0a0f0c0e010f0e0e0c0e010f5d0a0c0a590a0c0e0a0e0f0f0a0e0b0a0c0b5b0a0c0b0c0b0e0b0c0b0a0a5a0b0e0b080a5a0b0f0b0c0d0a0b0e0b0b0b5b0b0b0b0a0b5b0b0e0b0e0a000b0e0b0e0b0e0d5b0a0c0a590a0c0f0a0f0c0e0f0e000f0d0e590e0f0f0a0e5e0e010e000d0a0f5e0f0e0e0b0a0c0b5b0a0c0e0a0f0b0e0c0a0c0a590a0c0e5c0e0b0f5e0a0c0b5b0a0c0e0b0f0e0a5a0a010f080e5e0e0a0e0b0e010f0d0a010c0c0e080b090e080c0c0f5b0e090f090e010f080e0f0c090c090e5c0f0e0b0a0c090a010e0a0f0b0e0c0a010b0f0a0c0f5a\",\"priority\":7,\"sourceName\":\"Sak\",\"type\":\"iframe\",\"className\":\"\",\"streamerId\":\"allanime\"},{\"sourceUrl\":\"--504c4c484b0217174c5757544b165e594b4c0c4b485d5d5c164a4b4e4817174e515c5d574b177a5e0f5e7a425f4f574e597f7f53480c7f175c4d5a1709\",\"priority\":7.9,\"sourceName\":\"Yt-mp4\",\"type\":\"player\",\"className\":\"\",\"streamerId\":\"allanime\"},{\"sourceUrl\":\"https://streamsb.net/embed-8ftnbfwxpr9c.html\",\"priority\":5.5,\"sourceName\":\"Ss-Hls\",\"type\":\"iframe\",\"className\":\"text-danger\",\"streamerId\":\"allanime\",\"downloads\":{\"sourceName\":\"StreamSB\",\"downloadUrl\":\"https://streamsb.net/embed-8ftnbfwxpr9c.html&sandbox=allow-forms%20allow-scripts%20allow-same-origin%20allow-downloads\"}},{\"sourceUrl\":\"https://ok.ru/videoembed/2677984594578\",\"priority\":3.5,\"sourceName\":\"Ok\",\"type\":\"iframe\",\"sandbox\":\"allow-forms allow-scripts allow-same-origin\",\"className\":\"text-info\",\"streamerId\":\"allanime\"},{\"sourceUrl\":\"--175948514e4c4f57175b54575b5307515c050f5c0a0c0f0b0f0c0e590a0c0b5b0a0c0b5d0e0a0b0d0b0b0b0d0b5e0d010e0c0b080e0d0b090b080e0d0b080b0a0b0b0b0e0e0a0e0f0b0a0b5d0b0e0b0d0b5d0b0c0e0f0e080b5d0e0d0b5e0b0e0e0c0b0d0b5e0b080b0a0e0b0e0a0e0b0a0e0f590a0e0b0c0b5e0b0c0b0c0b0e0b080e0f0e0b0b0d0b0c0b0a0b0d0b5d0b5d0e0a0b0b0b090b090e0a0e0d0e080e0c0b080e0c0b0a0b5d0e0c0e080b0a0e0d0e0c0e080a0e0f590a0e0e5a0e0b0e0a0e5e0e0f0a010b5d0e0a0b0d0b0b0b0d0b5e0d010e0c0b080e0d0b090b080e0d0b080b0a0b0b0b0e0e0a0e0f0b0a0b5d0b0e0b0d0b5d0b0c0e0f0e080b5d0e0d0b5e0b0e0e0c0b0d0b5e0b080b0a0e0b0e0a0e0b0e080b0e0b0e0b0f0a000e5b0f0e0e090a0e0f590a0e0a590b0f0b0e0b5d0b0e0f0e0a590b0a0b5d0b0e0f0e0a590b090b0c0b0e0f0e0a590a0c0a590a0c0f0d0f0a0f0c0e0b0e0f0e5a0e0b0f0c0c5e0e0a0a0c0b5b0a0c0d090e5e0f5d0a0c0a590a0c0e0a0e0f0f0a0e0b0a0c0b5b0a0c0b0c0b0e0b0c0b0a0a5a0b0e0b080a5a0b0f0b0c0d0a0b0e0b0b0b5b0b0b0b0a0b5b0b0e0b0e0a000b0e0b0e0b0e0d5b0a0c0a590a0c0f0a0f0c0e0f0e000f0d0e590e0f0f0a0e5e0e010e000d0a0f5e0f0e0e0b0a0c0b5b0a0c0e0a0f0b0e0c0a0c0a590a0c0e5c0e0b0f5e0a0c0b5b0a0c0e0b0f0e0a5a0c0c0e080b090e080c0c0f5b0e090f090e010f080e0f0c090c090e5c0f0e0b0a0c090d010b0f0d010e0a0f0b0e0c0a0c0f5a\",\"priority\":8.5,\"sourceName\":\"Default\",\"type\":\"iframe\",\"className\":\"text-info\",\"streamerId\":\"allanime\"},{\"sourceUrl\":\"--175948514e4c4f57175b54575b5307515c050f5c0a0c0f0b0f0c0e590a0c0b5b0a0c0a010f0d0e5e0f0a0e0b0f0d0a010e0f0e000e5e0e5a0e0b0a010d0d0e5d0e0f0f0c0e0b0e0a0a0e0c0a0e010e0d0f0b0e5a0e0b0e000f0a0f0d0a010c0c0e080b090e080c0c0f5b0e090f090e010f080e0f0c090c090e5c0f0e0b0a0c090d010b0f0d010e0a0f0b0e0c0a000e5a0f0e0b0a0a0c0a590a0c0f0d0f0a0f0c0e0b0e0f0e5a0e0b0f0c0c5e0e0a0a0c0b5b0a0c0d0d0e5d0e0f0f0c0e0b0f0e0e010e5e0e000f0a0a0c0a590a0c0e0a0e0f0f0a0e0b0a0c0b5b0a0c0b0c0b0e0b0c0b0a0a5a0b0e0b080a5a0b0f0b0c0d0a0b0e0b0b0b5b0b0b0b0a0b5b0b0e0b0e0a000b0e0b0e0b0e0d5b0a0c0a590a0c0f0a0f0c0e0f0e000f0d0e590e0f0f0a0e5e0e010e000d0a0f5e0f0e0e0b0a0c0b5b0a0c0e0a0f0b0e0c0a0c0a590a0c0e5c0e0b0f5e0a0c0b5b0a0c0e0b0f0e0a5a0c0c0e080b090e080c0c0f5b0e090f090e010f080e0f0c090c090e5c0f0e0b0a0c090d010b0f0d010e0a0f0b0e0c0a0c0f5a\",\"priority\":7.4,\"sourceName\":\"S-mp4\",\"type\":\"iframe\",\"className\":\"\",\"streamerId\":\"allanime\",\"downloads\":{\"sourceName\":\"S-mp4\",\"downloadUrl\":\"https://blog.allanime.day/apivtwo/clock/download?id=7d2473746a243c2429756f7263752967686f6b6329556e6774636226426965736b636872752944603160447c617169706741416d763241593759627364286b7632242a2475727463676b63744f62243c24556e67746376696f6872242a2462677263243c24343634322b36302b37345236333c33323c3636283636365c242a24626971686a696762243c727473637b\"}}]}}}");
-
-    //NOTE: don't need to check ARC string find functions for errors as curlResponse and cstring will never be NULL
-    uint64_t startBracketIndex = ARC_String_FindCStringWithStrlen(curlResponse, "[");
-    uint64_t endBracketIndex = ARC_String_FindBackCStringWithStrlen(curlResponse, "]");
-    if(startBracketIndex == ~(uint64_t)0 || endBracketIndex == ~(uint64_t)0){
-        //could not find array in json of ids
-        arc_errno = ARC_ERRNO_DATA;
-        ARC_DEBUG_ERR("in temp(), couldn't find array in json, so probably malformed data");
-        return;
-    }
-
-    if(startBracketIndex >= endBracketIndex){
-        arc_errno = ARC_ERRNO_DATA;
-        ARC_DEBUG_ERR("in temp(), start bracked found after end bracket");
-        return;
-    }
-
-    //strip the brakets from the json
-    ARC_String *currentString;
-    ARC_String_CopySubstring(&currentString, curlResponse, startBracketIndex, endBracketIndex - startBracketIndex - 1);
-
-    //stor ids for later
-    ARC_Vector *providerIds;
-    ARC_Vector_Create(&providerIds);
-
-    while(currentString != NULL){
-        //NOTE: don't need to check ARC string find functions for errors as currentString and cstring will never be NULL
-        uint64_t startLabelStringIndex = ARC_String_FindCStringWithStrlen(currentString, "\"");
-        uint64_t endLabelStringIndex = ARC_String_FindCStringWithStrlen(currentString, "\":");
-        if(startLabelStringIndex == ~(uint64_t)0 || endLabelStringIndex == ~(uint64_t)0){
-            break;
-        }
-
-        //check if label is like :{ and we want to skip that type of label
-        if(currentString->data[endLabelStringIndex + 1] == '{'){
-            ARC_String *tempString = currentString;
-            ARC_String_CopySubstring(&currentString, tempString, endLabelStringIndex + 2, tempString->length - endLabelStringIndex - 2);
-            ARC_String_Destroy(tempString);
-            continue;
-        }
-
-        //NOTE: don't need to check ARC string find functions for errors as currentString and cstring will never be NULL
-        uint64_t startKeyStringIndex = ARC_String_FindCStringWithStrlen(currentString, ":");
-        uint64_t endKeyStringIndex = ARC_String_FindCStringWithStrlen(currentString, ",");
-        //this might be the end where there is a } instead of a , so check if that is the case
-        if(endKeyStringIndex == ~(uint64_t)0){
-            endKeyStringIndex = ARC_String_FindCStringWithStrlen(currentString, "}");
-        }
-
-        //couldn't find the key so break
-        if(startKeyStringIndex == ~(uint64_t)0 || endKeyStringIndex == ~(uint64_t)0){
-            break;
-        }
-
-        //strip the label
-        ARC_String *labelString;
-        ARC_String_CopySubstring(&labelString, currentString, startLabelStringIndex, endLabelStringIndex - startLabelStringIndex - 1);
-
-        //strip the key
-        ARC_String *keyString;
-        ARC_String_CopySubstring(&keyString, currentString, startKeyStringIndex, endKeyStringIndex - startKeyStringIndex - 1);
-
-        //remove the stripped section from the current string
-        if(endKeyStringIndex != currentString->length){
-            ARC_String *tempString = currentString;
-            ARC_String_CopySubstring(&currentString, tempString, endKeyStringIndex, tempString->length - endKeyStringIndex);
-            ARC_String_Destroy(tempString);
-        }
-        else {
-            //we hit the end of the string so delete it
-            ARC_String_Destroy(currentString);
-            currentString = NULL;
-        }
-
-        //set the id
-        if(ARC_String_EqualsCStringWithStrlen(labelString, "sourceUrl")){
-            ARC_String *tempString = keyString;
-            ARC_String_StripEnds(&keyString, tempString, '"');
-
-            //two dashes, -- in source url
-            if(keyString->length >= 3 && keyString->data[0] == '-' && keyString->data[1] == '-'){
-                ARC_String *tempString = keyString;
-                ARC_String_CopySubstring(&keyString, tempString, 2, tempString->length - 2);
-                ARC_String_Destroy(tempString);
-
-                ARC_String *showId;
-                HUSBANDO_Allanime_SubstitueId(&showId, keyString);
-
-                ARC_String_ReplaceMatchingCStringWithStrlen(&showId, "/clock", "/clock.json");
-
-                if(showId->data[0] != '?'){
-                    ARC_Vector_Add(providerIds, (void *)showId);
-                }
-                else {
-                    ARC_String_Destroy(showId);
-                }
-            }
-
-//            //cleanup
-//            //NOTE: key does not need to be cleaned up here because it is stored in providerShow, providerShow needs to clean it up
-            ARC_String_Destroy(tempString);
-            ARC_String_Destroy(labelString);
-            continue;
-        }
-
-        ARC_String_Destroy(labelString);
-        ARC_String_Destroy(keyString);
-    }
-
-    for(uint32_t i = 0; i < ARC_Vector_Size(providerIds); i++){
-        ARC_String *providerId = (ARC_String *)ARC_Vector_Get(providerIds, i);
-        printf("ID: %s\n", providerId->data);
-    }
-
-    ARC_String *providerId = (ARC_String *)ARC_Vector_Get(providerIds, 0);
-
-    ARC_String *tempCurlResponse;
-    char tempUrl[strlen("https://" HUSBANDO_ALLANIME_BASE) + providerId->length + 1];
-    sprintf(tempUrl, "%s%s", "https://" HUSBANDO_ALLANIME_BASE, providerId->data);
-    tempUrl[strlen("https://" HUSBANDO_ALLANIME_BASE) + providerId->length] = '\0';
-    HUSBANDO_Allanime_GetCurlResponse(&tempCurlResponse, tempUrl);
-    printf("\n\n%s\n\n", tempCurlResponse->data);
-
-    //cleanup
-    if(currentString != NULL){
-        ARC_String_Destroy(currentString);
-    }
-    ARC_String_Destroy(curlResponse);
+    return episode;
 }
 
 //private type used in HUSBANDO_Allanime_SubstitueId for a baisc substitution type

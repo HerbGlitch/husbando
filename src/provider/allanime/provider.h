@@ -19,14 +19,6 @@ extern "C" {
 #define HUSBANDO_ALLANIME_API       "https://api." HUSBANDO_ALLANIME_BASE "/api"
 #define HUSBANDO_ALLANIME_USERAGENT "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
 
-/*
- * @brief data urlencode defines
- *
- * @note this info can be found in https://github.com/pystardust/ani-cli
-*/
-
-#define HUSBANDO_ALLANIME_EPISODE_QUERY "query ($showId: String!, $translationType: VaildTranslationTypeEnumType!, $episodeString: String!) {    episode(        showId: $showId        translationType: $translationType        episodeString: $episodeString    ) {        episodeString sourceUrls    }}"
-
 /**
  * @breif
 */
@@ -85,13 +77,13 @@ ARC_Vector *HUSBANDO_Allanime_Search(HUSBANDO_CoreProvider *provider, ARC_String
  * @note this function matches HUSBANDO_CoreProivder_GetEpisodeFn
  * @note returned value needs to be freed if it is not NULL
  *
- * @param provider a reference to the provider to allow storing of data
- * @param show     the show to get the episode from
- * @param episode  the episode to get the details of
+ * @param provider      a reference to the provider to allow storing of data
+ * @param show          the show to get the episode from
+ * @param episodeNumber the episode to get the details of
  *
  * @return the episode and its details on success, or NULL on failure
 */
-HUSBANDO_CoreProviderEpisode *HUSBANDO_Allanime_GetEpisode(HUSBANDO_CoreProvider *provider, HUSBANDO_CoreProviderShow *show, uint32_t episode);
+HUSBANDO_CoreProviderEpisode *HUSBANDO_Allanime_GetEpisode(HUSBANDO_CoreProvider *provider, HUSBANDO_CoreProviderShow *show, uint32_t episodeNumber);
 
 /**
  * @breif searches all anime for a given show name
@@ -111,8 +103,6 @@ void HUSBANDO_Allanime_GetCurrentEpisodeURL(ARC_String *resolution);
  * @param inputId
 */
 void HUSBANDO_Allanime_SubstitueId(ARC_String **outputId, ARC_String *inputId);
-
-void temp1();
 
 #ifdef __cplusplus
 }

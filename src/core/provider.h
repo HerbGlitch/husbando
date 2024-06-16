@@ -35,26 +35,26 @@ typedef ARC_Vector *(* HUSBANDO_CoreProvider_SearchFn)(HUSBANDO_CoreProvider *pr
  *
  * @note returned value needs to be freed if it is not NULL
  *
- * @param provider a reference to the provider to allow storing of data
- * @param show     the show to get the episode from
- * @param episode  the episode to get the details of
+ * @param provider      a reference to the provider to allow storing of data
+ * @param show          the show to get the episode from
+ * @param episodeNumber the episode to get the details of
  *
  * @return the episode and its details on success, or NULL on failure
 */
-typedef HUSBANDO_CoreProviderEpisode *(* HUSBANDO_CoreProvider_GetEpisodeFn)(HUSBANDO_CoreProvider *provider, HUSBANDO_CoreProviderShow *show, uint32_t episode);
+typedef HUSBANDO_CoreProviderEpisode *(* HUSBANDO_CoreProvider_GetEpisodeFn)(HUSBANDO_CoreProvider *provider, HUSBANDO_CoreProviderShow *show, uint32_t episodeNumber);
 
 /**
  * @breif gets the details and url of a show at an episode
  *
  * @note returned value needs to be freed if it is not NULL
  *
- * @param provider a reference to the provider to allow storing of data
- * @param showId   the show id to get the episode from
- * @param episode  the episode to get the details of
+ * @param provider      a reference to the provider to allow storing of data
+ * @param showId        the show id to get the episode from
+ * @param episodeNumber the episode to get the details of
  *
  * @return the episode and its details on success, or NULL on failure
 */
-typedef HUSBANDO_CoreProviderEpisode *(* HUSBANDO_CoreProvider_GetEpisodeByShowIdFn)(HUSBANDO_CoreProvider *provider, ARC_String *showId, uint32_t episode);
+typedef HUSBANDO_CoreProviderEpisode *(* HUSBANDO_CoreProvider_GetEpisodeByShowIdFn)(HUSBANDO_CoreProvider *provider, ARC_String *showId, uint32_t episodeNumber);
 
 /**
  * @breif gets a url from an episode of a specific resolution

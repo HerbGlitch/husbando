@@ -4,7 +4,14 @@ project(husbando LANGUAGES C VERSION 0.0.1)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_C_FLAGS "-Wall -Werror -g -ggdb -DARC_DEBUG ")
+#set(CMAKE_C_FLAGS "-Wall -Werror -g -ggdb -DARC_DEBUG ")
+
+#TODO: add "-Wpedantic"
+add_compile_options(
+  "-Wall" "-fexceptions"
+  "$<$<CONFIG:DEBUG>:-O0;-g3;-ggdb>"
+  "$<$<CONFIG:RELEASE>:-Wextra>"
+)
 
 set(ARCHEUS_STD_CONSOLE_BACKEND "NCURSES" CACHE STRING "use ncurses")
 set(ARCHEUS_STD_SSH_BACKEND     "LIBSSH"  CACHE STRING "use libssh" )
@@ -30,6 +37,10 @@ add_executable(husbando
 
     #inih stuff
     lib/inih/ini.c
+)
+
+target_compile_definitions(husbando PRIVATE
+    $<$<CONFIG:Debug>:ARC_DEBUG>
 )
 
 target_include_directories(husbando
