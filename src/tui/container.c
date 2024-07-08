@@ -20,12 +20,13 @@ void HUSBANDO_TUIContainer_Create(HUSBANDO_TUIContainer **container, char *title
 
     ARC_ConsoleView_Create(&((*container)->view), (ARC_Rect){ 0, 0, 0, 0 });
     ARC_Stack_Create(&((*container)->consoleKeyStack));
+    ARC_String_Create(&((*container)->consoleSearchString), "", 0);
 
     (*container)->title = title;
 
     (*container)->page = page;
 
-    (*container)->captureInput = ARC_False;
+    (*container)->inputMode = NORMAL;
 
     (*container)->cursor = (ARC_Point){ 0, 0 };
     (*container)->visibleCursor = ARC_False;
@@ -133,37 +134,18 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
     //main thread, handle key inputs and exiting
     container->running = ARC_True;
     while(container->running){
-        ARC_ConsoleKey *key = ARC_ConsoleView_GetCreateConsoleKeyAt(container->view, container->cursor);
-        if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_Q)){
-            pthread_mutex_lock(&(container->bufferMutex));
-            container->running = ARC_False;
-            pthread_mutex_unlock(&(container->bufferMutex));
-            break;
+        //handle input modes
+        switch(container->inputMode){
+            case NORMAL:
+                HUSBANDO_TUIContainer_HandleNormalInput(container);
+                break;
+
+            case SEARCH:
+                HUSBANDO_TUIContainer_HandleSearchInput(container);
+                break;
         }
 
-        if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_S)){
-            ARC_String *url;
-            //ARC_String_CreateWithStrlen(&url, "https://youtu.be/1P5BSm_oFJg");
-            //ARC_String_CreateWithStrlen(&url, "https://youtu.be/fBGSJ3sbivI");
-            //ARC_String_CreateWithStrlen(&url, "https://youtu.be/QdabIfmcqSQ");
-            //ARC_String_CreateWithStrlen(&url, "https://youtu.be/QBYr0k8dOtw");
-            ARC_String_CreateWithStrlen(&url, "https://youtu.be/RjM8d0Csuk4");
-            HUSBANDO_Core_ControlsInit(husbando_core, url, ARC_True);
-            ARC_String_Destroy(url);
-        }
-
-        if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_H)){
-            HUSBANDO_Core_ControlsSeekLeft(husbando_core);
-        }
-
-        if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_L)){
-            HUSBANDO_Core_ControlsSeekRight(husbando_core);
-        }
-
-        if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_P)){
-            HUSBANDO_Core_ControlsPlay(husbando_core);
-        }
-
+        //update the page with the new input
         pthread_mutex_lock(&(container->bufferMutex));
         container->page->mainFn(container->page->view, container->page->data);
         pthread_mutex_unlock(&(container->bufferMutex));
@@ -186,4 +168,73 @@ void HUSBANDO_TUIContainer_ClearConsoleKeyStack(HUSBANDO_TUIContainer *container
 
 void HUSBANDO_TUIContainer_SetPage(HUSBANDO_TUIContainer *container, HUSBANDO_TUIPage *page){
     container->page = page;
+}
+
+void HUSBANDO_TUIContainer_HandleNormalInput(HUSBANDO_TUIContainer *container){
+    ARC_ConsoleKey *key = ARC_ConsoleView_GetCreateConsoleKeyAt(container->view, container->cursor);
+
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_Q)){
+        pthread_mutex_lock(&(container->bufferMutex));
+        container->running = ARC_False;
+        pthread_mutex_unlock(&(container->bufferMutex));
+        return;
+    }
+
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_S)){
+        container->inputMode = SEARCH;
+        return;
+    }
+
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_O)){
+        ARC_String *url;
+        //ARC_String_CreateWithStrlen(&url, "https://youtu.be/1P5BSm_oFJg");
+        //ARC_String_CreateWithStrlen(&url, "https://youtu.be/fBGSJ3sbivI");
+        //ARC_String_CreateWithStrlen(&url, "https://youtu.be/QdabIfmcqSQ");
+        //ARC_String_CreateWithStrlen(&url, "https://youtu.be/QBYr0k8dOtw");
+        ARC_String_CreateWithStrlen(&url, "https://youtu.be/RjM8d0Csuk4");
+        HUSBANDO_Core_ControlsInit(husbando_core, url, ARC_True);
+        ARC_String_Destroy(url);
+        return;
+    }
+
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_H)){
+        HUSBANDO_Core_ControlsSeekLeft(husbando_core);
+        return;
+    }
+
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_L)){
+        HUSBANDO_Core_ControlsSeekRight(husbando_core);
+        return;
+    }
+
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_P)){
+        HUSBANDO_Core_ControlsPlay(husbando_core);
+        return;
+    }
+}
+
+void HUSBANDO_TUIContainer_HandleSearchInput(HUSBANDO_TUIContainer *container){
+    ARC_ConsoleKey *key = ARC_ConsoleView_GetCreateConsoleKeyAt(container->view, container->cursor);
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_ESC)){
+        container->inputMode = NORMAL;
+        return;
+    }
+
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_BACKSPACE)){
+        if(container->consoleSearchString->length == 1){
+            ARC_String_Destroy(container->consoleSearchString);
+            ARC_String_Create(&(container->consoleSearchString), "", 0);
+            return;
+        }
+
+        if(container->consoleSearchString->length == 0){
+            return;
+        }
+
+        ARC_String_ReplaceWithSubstring(&(container->consoleSearchString), 0, container->consoleSearchString->length - 1);
+        return;
+    }
+
+    char keyChar = ARC_ConsoleKey_GetCharFromKey(key);
+    ARC_String_AppendCString(&(container->consoleSearchString), &keyChar, 1);
 }

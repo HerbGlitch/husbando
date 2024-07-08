@@ -20,17 +20,6 @@ extern "C" {
 #define HUSBANDO_ALLANIME_USERAGENT "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
 
 /**
- * @breif
-*/
-typedef struct HUSBANDO_ProviderShow {
-    ARC_String *name;
-    uint32_t subEpisodesCount;
-    uint32_t dubEpisodesCount;
-
-    void *providerData;
-} HUSBANDO_ProviderShow;
-
-/**
  * @breif creates a husbando core provider type filled with allanime functions
  *
  * @param provider the parameter to store the allanime provider in

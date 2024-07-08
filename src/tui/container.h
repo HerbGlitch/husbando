@@ -13,18 +13,24 @@
 extern "C" {
 #endif
 
+typedef enum HUSBANDO_TUIContainerInputMode {
+    NORMAL,
+    SEARCH
+} HUSBANDO_TUIContainerInputMode;
+
 /**
  * @breif the tui container type, basically holds all of the tui, will be multithreaded to allow for background refreshing
 */
 typedef struct HUSBANDO_TUIContainer {
     ARC_ConsoleView *view;
     ARC_Stack       *consoleKeyStack;
+    ARC_String      *consoleSearchString;
 
     char *title;
 
     HUSBANDO_TUIPage *page;
 
-    ARC_Bool captureInput;
+    HUSBANDO_TUIContainerInputMode inputMode;
 
     ARC_Point cursor;
     ARC_Bool  visibleCursor;
@@ -77,6 +83,20 @@ void HUSBANDO_TUIContainer_ClearConsoleKeyStack(HUSBANDO_TUIContainer *container
  * @param page      the page to set in the container, can be NULL
 */
 void HUSBANDO_TUIContainer_SetPage(HUSBANDO_TUIContainer *container, HUSBANDO_TUIPage *page);
+
+/**
+ * @brief handles input when in normal mode
+ *
+ * @param container the conter that is in normal mode
+*/
+void HUSBANDO_TUIContainer_HandleNormalInput(HUSBANDO_TUIContainer *container);
+
+/**
+ * @brief handles input when in search mode
+ *
+ * @param container the conter that is in search mode
+*/
+void HUSBANDO_TUIContainer_HandleSearchInput(HUSBANDO_TUIContainer *container);
 
 #ifdef __cplusplus
 }
