@@ -29,6 +29,7 @@ typedef struct HUSBANDO_TUIContainer {
     char *title;
 
     HUSBANDO_TUIPage *page;
+    HUSBANDO_TUIPageId nextPageId;
 
     HUSBANDO_TUIContainerInputMode inputMode;
 
@@ -77,24 +78,44 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container);
 void HUSBANDO_TUIContainer_ClearConsoleKeyStack(HUSBANDO_TUIContainer *container);
 
 /**
+ * @brief gest the tui containers page
+ *
+ * @param container the container to get the page from
+ *
+ * @return the page to set in the container or NULL if it doesn't exist
+*/
+HUSBANDO_TUIPage *HUSBANDO_TUIContainer_GetPage(HUSBANDO_TUIContainer *container);
+
+/**
  * @brief sets the tui containers page
  *
- * @param container the conter which is having its page being set
+ * @param container the container which is having its page being set
  * @param page      the page to set in the container, can be NULL
 */
 void HUSBANDO_TUIContainer_SetPage(HUSBANDO_TUIContainer *container, HUSBANDO_TUIPage *page);
 
 /**
+ * @brief sets the page while it is running
+ *
+ * @note if the page is running use this function instead of HUSBANDO_TUIContainer_SetPage
+ * @note this will free the current running page
+ *
+ * @param container the container which is having a page queued
+ * @param pageId    the id of the page to add in the container, cannot be HUSBANDO_TUI_PAGE_ID_NONE
+*/
+void HUSBANDO_TUIContainer_AddPage(HUSBANDO_TUIContainer *container, HUSBANDO_TUIPageId pageId);
+
+/**
  * @brief handles input when in normal mode
  *
- * @param container the conter that is in normal mode
+ * @param container the container that is in normal mode
 */
 void HUSBANDO_TUIContainer_HandleNormalInput(HUSBANDO_TUIContainer *container);
 
 /**
  * @brief handles input when in search mode
  *
- * @param container the conter that is in search mode
+ * @param container the container that is in search mode
 */
 void HUSBANDO_TUIContainer_HandleSearchInput(HUSBANDO_TUIContainer *container);
 

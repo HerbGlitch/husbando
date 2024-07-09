@@ -2,6 +2,7 @@
 #define HUSBANDO_CORE_H_
 
 #include "player.h"
+#include "provider.h"
 #include <stdint.h>
 #include <arc/networking/ssh.h>
 #include <arc/std/bool.h>
@@ -14,6 +15,9 @@ extern "C" {
 #define HUSBANDO_CORE_VIDEO_PLAYER_MPV  1
 #define HUSBANDO_CORE_VIDEO_PLAYER_CVLC 2
 
+#define HUSBANDO_CORE_VIDEO_PROVIDER_NONE     0
+#define HUSBANDO_CORE_VIDEO_PROVIDER_LOCAL    1
+#define HUSBANDO_CORE_VIDEO_PROVIDER_ALLANIME 2
 /**
  * @breif the core of husbando, holds ssh, video player, queue, and note
  *
@@ -30,6 +34,9 @@ typedef struct HUSBANDO_Core {
 
     HUSBANDO_CorePlayer *player;
     uint8_t              playerId;
+
+    HUSBANDO_CoreProvider *provider;
+    uint8_t                providerId;
 } HUSBANDO_Core;
 
 /**
@@ -43,7 +50,7 @@ extern HUSBANDO_Core *husbando_core;
  * @param core     the core which will be created
  * @param playerId which video player to initialize
 */
-void HUSBANDO_Core_Create(HUSBANDO_Core **core, uint8_t playerId);
+void HUSBANDO_Core_Create(HUSBANDO_Core **core, uint8_t playerId, uint8_t providerId);
 
 /**
  * @breif cleans up the core of husbando, will save before destroying the data type
@@ -59,6 +66,14 @@ void HUSBANDO_Core_Destroy(HUSBANDO_Core *core);
  * @param playerId the video player to initialize and set into the core
 */
 void HUSBANDO_Core_SetPlayer(HUSBANDO_Core *core, uint8_t playerId);
+
+/**
+ * @breif sets the provider to use in the core
+ *
+ * @param core       the core which will have its player set
+ * @param providerId the video provider to initialize and set into the core
+*/
+void HUSBANDO_Core_SetProvider(HUSBANDO_Core *core, uint8_t providerId);
 
 /**
  * @breif will create an ssh session when sshConnect is set to true or destroy a session if set to false

@@ -50,14 +50,13 @@ int main(int32_t argc, char **argv){
 #include "core/core.h"
 #include "tui/container.h"
 #include "tui/page.h"
-#include "tui/pages/index.h"
 #include <arc/console/view.h>
 #include <arc/math/rectangle.h>
 
 int main(int argc, char *argv[]){
     HUSBANDO_Config_Init("res/config/husbando.ini");
 
-    HUSBANDO_Core_Create(&husbando_core, HUSBANDO_CORE_VIDEO_PLAYER_MPV);
+    HUSBANDO_Core_Create(&husbando_core, HUSBANDO_CORE_VIDEO_PLAYER_MPV, HUSBANDO_CORE_VIDEO_PROVIDER_ALLANIME);
 
     HUSBANDO_TUIContainer *container;
     HUSBANDO_TUIContainer_Create(&container, (char *)husbando_config.Tui.containerName, NULL, 100);
@@ -65,12 +64,15 @@ int main(int argc, char *argv[]){
     ARC_Rect pageSize = ARC_ConsoleView_GetBounds(container->view);
 
     HUSBANDO_TUIPage *page;
-    HUSBANDO_TUIPage_CreateIndex(&page, container, pageSize);
+    HUSBANDO_TUIPage_CreateWithId(&page, HUSBANDO_TUI_PAGE_ID_INDEX, container, pageSize);
 
     HUSBANDO_TUIContainer_SetPage(container, page);
     HUSBANDO_TUIContainer_RunPage(container);
 
-    HUSBANDO_TUIPage_DestroyIndex(page);
+    page = HUSBANDO_TUIContainer_GetPage(container);
+    if(page != NULL){
+        HUSBANDO_TUIPage_Destroy(page);
+    }
 
     HUSBANDO_TUIContainer_Destory(container);
 

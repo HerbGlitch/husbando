@@ -1,8 +1,12 @@
 #include "base.h"
 
+#include "page.h"
 #include "core/core.h"
 #include "core/controls.h"
+#include "pages/search.h"
+#include "tui/container.h"
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <arc/console/view.h>
 #include <arc/math/rectangle.h>
@@ -62,15 +66,27 @@ void HUSBANDO_TUIBase_Main(HUSBANDO_TUIBase *base){
 
     //search
     if(base->search != NULL){
-        if(base->search->length > base->container->consoleSearchString->length){
-            ARC_ConsoleView_RenderCharAt(base->view, ' ', (ARC_Point){ bounds.x + bounds.w - 63 + base->search->length - 1, bounds.y + 2 });
+        if(strlen(base->search->data) > strlen(base->container->consoleSearchString->data)){
+            ARC_ConsoleView_RenderCharAt(base->view, ' ', (ARC_Point){ bounds.x + bounds.w - 63 + strlen(base->search->data) - 1, bounds.y + 2 });
         }
 
         ARC_String_Destroy(base->search);
         base->search = NULL;
     }
 
-    if(base->container->consoleSearchString->length != 0){
+    if(base->container->visibleCursor && base->container->inputMode == SEARCH){
+        uint64_t index = strlen(base->container->consoleSearchString->data);
+        base->container->cursor = (ARC_Point){ bounds.x + bounds.w - 63 + index, bounds.y + 2 };
+    }
+
+    uint64_t currentConsoleSearchStringLength = strlen(base->container->consoleSearchString->data);
+    if(currentConsoleSearchStringLength != 0){
+        //check for enter
+        if(base->container->consoleSearchString->data[currentConsoleSearchStringLength - 1] == '\n'){
+            base->container->consoleSearchString->data[currentConsoleSearchStringLength - 1] = '\0';
+            HUSBANDO_TUIContainer_AddPage(base->container, HUSBANDO_TUI_PAGE_ID_SEARCH);
+        }
+
         ARC_ConsoleView_RenderStringAt(base->view, base->container->consoleSearchString, (ARC_Point){ bounds.x + bounds.w - 63, bounds.y + 2 });
         ARC_String_Copy(&(base->search), base->container->consoleSearchString);
     }
@@ -81,6 +97,11 @@ void HUSBANDO_TUIBase_PollIndex(HUSBANDO_TUIBase *base){
 
     ARC_Time oldCurrentTime = base->currentTime;
     ARC_Time oldFullTime = base->fullTime;
+
+    if(base->container->visibleCursor && base->container->inputMode == SEARCH){
+        uint64_t index = strlen(base->container->consoleSearchString->data);
+        base->container->cursor = (ARC_Point){ bounds.x + bounds.w - 63 + index, bounds.y + 2 };
+    }
 
     //get the current player time and the full time
     base->currentTime = HUSBANDO_Core_ControlsGetCurrentTime(husbando_core);

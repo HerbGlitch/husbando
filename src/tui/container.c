@@ -5,6 +5,7 @@
 #include "core/core.h"
 #include <pthread.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <arc/console/key.h>
 #include <arc/console/view.h>
@@ -20,7 +21,9 @@ void HUSBANDO_TUIContainer_Create(HUSBANDO_TUIContainer **container, char *title
 
     ARC_ConsoleView_Create(&((*container)->view), (ARC_Rect){ 0, 0, 0, 0 });
     ARC_Stack_Create(&((*container)->consoleKeyStack));
-    ARC_String_Create(&((*container)->consoleSearchString), "", 0);
+
+    //todo change this to 128
+    ARC_String_CreateEmpty(&((*container)->consoleSearchString), 36);
 
     (*container)->title = title;
 
@@ -66,9 +69,7 @@ void HUSBANDO_TUIContainer_Destory(HUSBANDO_TUIContainer *container){
 
 //private type for polling
 typedef struct HUSBANDO_TUIContainerPollParams {
-    HUSBANDO_TUIPage_PollFn pollFn;
-    ARC_ConsoleView *view;
-    void *data;
+    HUSBANDO_TUIPage *page;
 
     ARC_Bool *running;
     uint32_t pollTime;
@@ -87,7 +88,7 @@ void *HUSBANDO_TUIContainer_RunPoll(void *data){
 
     while(threadRunning){
         pthread_mutex_lock(pollParams->bufferMutex);
-        pollParams->pollFn(pollParams->view, pollParams->data);
+        pollParams->page->pollFn(pollParams->page->view, pollParams->page->data);
         pthread_mutex_unlock(pollParams->bufferMutex);
 
         nanosleep(&sleepTime, &sleepTime);
@@ -108,9 +109,7 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
     }
 
     HUSBANDO_TUIContainerPollParams pollParams = {
-        container->page->pollFn,
-        container->page->view,
-        container->page->data,
+        container->page,
 
         &(container->running),
         container->pollTime,
@@ -134,13 +133,26 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
     //main thread, handle key inputs and exiting
     container->running = ARC_True;
     while(container->running){
+        if(container->nextPageId != HUSBANDO_TUI_PAGE_ID_NONE){
+            pthread_mutex_lock(&(container->bufferMutex));
+            ARC_Rect bounds = ARC_ConsoleView_GetBounds(container->page->view);
+            HUSBANDO_TUIPage_Destroy(container->page);
+
+            HUSBANDO_TUIPage_CreateWithId(&(container->page), container->nextPageId, container, bounds);
+            pthread_mutex_unlock(&(container->bufferMutex));
+
+            container->nextPageId = HUSBANDO_TUI_PAGE_ID_NONE;
+        }
+
         //handle input modes
         switch(container->inputMode){
             case NORMAL:
+                container->visibleCursor = ARC_False;
                 HUSBANDO_TUIContainer_HandleNormalInput(container);
                 break;
 
             case SEARCH:
+                container->visibleCursor = ARC_True;
                 HUSBANDO_TUIContainer_HandleSearchInput(container);
                 break;
         }
@@ -166,8 +178,16 @@ void HUSBANDO_TUIContainer_ClearConsoleKeyStack(HUSBANDO_TUIContainer *container
     }
 }
 
+HUSBANDO_TUIPage *HUSBANDO_TUIContainer_GetPage(HUSBANDO_TUIContainer *container){
+    return container->page;
+}
+
 void HUSBANDO_TUIContainer_SetPage(HUSBANDO_TUIContainer *container, HUSBANDO_TUIPage *page){
     container->page = page;
+}
+
+void HUSBANDO_TUIContainer_AddPage(HUSBANDO_TUIContainer *container, HUSBANDO_TUIPageId pageId){
+    container->nextPageId = pageId;
 }
 
 void HUSBANDO_TUIContainer_HandleNormalInput(HUSBANDO_TUIContainer *container){
@@ -181,6 +201,8 @@ void HUSBANDO_TUIContainer_HandleNormalInput(HUSBANDO_TUIContainer *container){
     }
 
     if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_S)){
+        ARC_ConsoleView_SetCursorVisibility(container->view, ARC_CONSOLE_VIEW_CURSOR_VISIBLE);
+        container->visibleCursor = ARC_True;
         container->inputMode = SEARCH;
         return;
     }
@@ -216,25 +238,25 @@ void HUSBANDO_TUIContainer_HandleNormalInput(HUSBANDO_TUIContainer *container){
 void HUSBANDO_TUIContainer_HandleSearchInput(HUSBANDO_TUIContainer *container){
     ARC_ConsoleKey *key = ARC_ConsoleView_GetCreateConsoleKeyAt(container->view, container->cursor);
     if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_ESC)){
+        ARC_ConsoleView_SetCursorVisibility(container->view, ARC_CONSOLE_VIEW_CURSOR_HIDDEN);
+        container->visibleCursor = ARC_False;
         container->inputMode = NORMAL;
         return;
     }
 
+    uint64_t currentConsoleSearchStringLength = strlen(container->consoleSearchString->data);
+
     if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_BACKSPACE)){
-        if(container->consoleSearchString->length == 1){
-            ARC_String_Destroy(container->consoleSearchString);
-            ARC_String_Create(&(container->consoleSearchString), "", 0);
+        if(currentConsoleSearchStringLength == 0){
             return;
         }
 
-        if(container->consoleSearchString->length == 0){
-            return;
-        }
-
-        ARC_String_ReplaceWithSubstring(&(container->consoleSearchString), 0, container->consoleSearchString->length - 1);
+        container->consoleSearchString->data[currentConsoleSearchStringLength - 1] = '\0';
         return;
     }
 
     char keyChar = ARC_ConsoleKey_GetCharFromKey(key);
-    ARC_String_AppendCString(&(container->consoleSearchString), &keyChar, 1);
+    if(currentConsoleSearchStringLength < container->consoleSearchString->length){
+        container->consoleSearchString->data[currentConsoleSearchStringLength] = keyChar;
+    }
 }
