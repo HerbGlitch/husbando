@@ -302,6 +302,9 @@ HUSBANDO_CoreProviderEpisode *HUSBANDO_Allanime_GetEpisode(HUSBANDO_CoreProvider
     const char *queryCString = "query ($showId: String!, $translationType: VaildTranslationTypeEnumType!, $episodeString: String!) {    episode(        showId: $showId        translationType: $translationType        episodeString: $episodeString    ) {        episodeString sourceUrls    }}";
     const char *variablesCString = "{\"showId\":\"%s\",\"translationType\":\"%s\",\"episodeString\":\"%d\"}";
 
+//    ARC_String_Destroy(show->providerId);
+//    ARC_String_CreateWithStrlen(&(show->providerId), "KB5XDvwPdtLFEkoQZ");
+
     //get the variables with name in the string
     //note: max value of a uint32_t is 4294967295 which is 10 digits in length, so + 10
     uint64_t variablesLength = strlen(variablesCString) + show->providerId->length + show->language->length + 10;
@@ -445,6 +448,7 @@ HUSBANDO_CoreProviderEpisode *HUSBANDO_Allanime_GetEpisode(HUSBANDO_CoreProvider
     char tempUrl[strlen("https://" HUSBANDO_ALLANIME_BASE) + providerId->length + 1];
     sprintf(tempUrl, "%s%s", "https://" HUSBANDO_ALLANIME_BASE, providerId->data);
     tempUrl[strlen("https://" HUSBANDO_ALLANIME_BASE) + providerId->length] = '\0';
+//    printf("TEMPURL: \"%s\"\n", tempUrl);
     HUSBANDO_Allanime_GetCurlResponse(&tempCurlResponse, tempUrl);
 
     //strip the url

@@ -7,7 +7,7 @@
 #include <arc/console/view.h>
 #include <arc/math/point.h>
 #include <arc/std/bool.h>
-#include <arc/std/stack.h>
+#include <arc/std/queue.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,13 +23,13 @@ typedef enum HUSBANDO_TUIContainerInputMode {
 */
 typedef struct HUSBANDO_TUIContainer {
     ARC_ConsoleView *view;
-    ARC_Stack       *consoleKeyStack;
+    ARC_Queue       *consoleKeyQueue;
     ARC_String      *consoleSearchString;
 
     char *title;
 
-    HUSBANDO_TUIPage *page;
-    HUSBANDO_TUIPageId nextPageId;
+    HUSBANDO_TUIPage   *page;
+    HUSBANDO_TUIPageId  nextPageId;
 
     HUSBANDO_TUIContainerInputMode inputMode;
 
@@ -75,7 +75,7 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container);
  *
  * @param container the tui to clear the key buffer from
 */
-void HUSBANDO_TUIContainer_ClearConsoleKeyStack(HUSBANDO_TUIContainer *container);
+void HUSBANDO_TUIContainer_ClearConsoleKeyQueue(HUSBANDO_TUIContainer *container);
 
 /**
  * @brief gest the tui containers page

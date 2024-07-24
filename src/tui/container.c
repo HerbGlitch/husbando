@@ -13,14 +13,14 @@
 #include <arc/math/rectangle.h>
 #include <arc/std/bool.h>
 #include <arc/std/errno.h>
-#include <arc/std/stack.h>
+#include <arc/std/queue.h>
 #include <arc/std/string.h>
 
 void HUSBANDO_TUIContainer_Create(HUSBANDO_TUIContainer **container, char *title, HUSBANDO_TUIPage *page, uint32_t pollTime){
     *container = (HUSBANDO_TUIContainer *)malloc(sizeof(HUSBANDO_TUIContainer));
 
     ARC_ConsoleView_Create(&((*container)->view), (ARC_Rect){ 0, 0, 0, 0 });
-    ARC_Stack_Create(&((*container)->consoleKeyStack));
+    ARC_Queue_Create(&((*container)->consoleKeyQueue));
 
     //todo change this to 128
     ARC_String_CreateEmpty(&((*container)->consoleSearchString), 36);
@@ -47,21 +47,20 @@ void HUSBANDO_TUIContainer_Create(HUSBANDO_TUIContainer **container, char *title
         ARC_DEBUG_ERR("HUSBANDO_TUIContainer_Create(container, title, page, pollTime), could not init buffer mutex");
 
         //the container cannot run without the mutex, so destroy the container and set the param value to NULL
-        HUSBANDO_TUIContainer_ClearConsoleKeyStack(*container);
+        HUSBANDO_TUIContainer_ClearConsoleKeyQueue(*container);
 
-        ARC_Stack_Destroy((*container)->consoleKeyStack);
+        ARC_Queue_Destroy((*container)->consoleKeyQueue);
         ARC_ConsoleView_Destroy((*container)->view);
 
         free(*container);
         *container = NULL;
-        return;
     }
 }
 
 void HUSBANDO_TUIContainer_Destory(HUSBANDO_TUIContainer *container){
-    HUSBANDO_TUIContainer_ClearConsoleKeyStack(container);
+    HUSBANDO_TUIContainer_ClearConsoleKeyQueue(container);
 
-    ARC_Stack_Destroy(container->consoleKeyStack);
+    ARC_Queue_Destroy(container->consoleKeyQueue);
     ARC_ConsoleView_Destroy(container->view);
 
     free(container);
@@ -139,6 +138,9 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
             HUSBANDO_TUIPage_Destroy(container->page);
 
             HUSBANDO_TUIPage_CreateWithId(&(container->page), container->nextPageId, container, bounds);
+
+            //update once before running
+            container->page->mainFn(container->page->view, container->page->data);
             pthread_mutex_unlock(&(container->bufferMutex));
 
             container->nextPageId = HUSBANDO_TUI_PAGE_ID_NONE;
@@ -147,12 +149,10 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
         //handle input modes
         switch(container->inputMode){
             case NORMAL:
-                container->visibleCursor = ARC_False;
                 HUSBANDO_TUIContainer_HandleNormalInput(container);
                 break;
 
             case SEARCH:
-                container->visibleCursor = ARC_True;
                 HUSBANDO_TUIContainer_HandleSearchInput(container);
                 break;
         }
@@ -167,9 +167,9 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
     pthread_join(container->pollThread, NULL);
 }
 
-void HUSBANDO_TUIContainer_ClearConsoleKeyStack(HUSBANDO_TUIContainer *container){
-    while(ARC_Stack_Size(container->consoleKeyStack) != 0){
-        ARC_ConsoleKey *key = (ARC_ConsoleKey *)ARC_Stack_Pop(container->consoleKeyStack);
+void HUSBANDO_TUIContainer_ClearConsoleKeyQueue(HUSBANDO_TUIContainer *container){
+    while(ARC_Queue_Size(container->consoleKeyQueue) != 0){
+        ARC_ConsoleKey *key = (ARC_ConsoleKey *)ARC_Queue_Pop(container->consoleKeyQueue);
         if(key == NULL){
             continue;
         }
@@ -193,51 +193,49 @@ void HUSBANDO_TUIContainer_AddPage(HUSBANDO_TUIContainer *container, HUSBANDO_TU
 void HUSBANDO_TUIContainer_HandleNormalInput(HUSBANDO_TUIContainer *container){
     ARC_ConsoleKey *key = ARC_ConsoleView_GetCreateConsoleKeyAt(container->view, container->cursor);
 
-    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_Q)){
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_CONSOLE_KEY_Q)){
         pthread_mutex_lock(&(container->bufferMutex));
         container->running = ARC_False;
         pthread_mutex_unlock(&(container->bufferMutex));
         return;
     }
 
-    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_S)){
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_CONSOLE_KEY_S)){
         ARC_ConsoleView_SetCursorVisibility(container->view, ARC_CONSOLE_VIEW_CURSOR_VISIBLE);
         container->visibleCursor = ARC_True;
         container->inputMode = SEARCH;
         return;
     }
 
-    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_O)){
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_CONSOLE_KEY_O)){
         ARC_String *url;
-        //ARC_String_CreateWithStrlen(&url, "https://youtu.be/1P5BSm_oFJg");
-        //ARC_String_CreateWithStrlen(&url, "https://youtu.be/fBGSJ3sbivI");
-        //ARC_String_CreateWithStrlen(&url, "https://youtu.be/QdabIfmcqSQ");
-        //ARC_String_CreateWithStrlen(&url, "https://youtu.be/QBYr0k8dOtw");
         ARC_String_CreateWithStrlen(&url, "https://youtu.be/RjM8d0Csuk4");
         HUSBANDO_Core_ControlsInit(husbando_core, url, ARC_True);
         ARC_String_Destroy(url);
         return;
     }
 
-    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_H)){
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_CONSOLE_KEY_H)){
         HUSBANDO_Core_ControlsSeekLeft(husbando_core);
         return;
     }
 
-    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_L)){
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_CONSOLE_KEY_L)){
         HUSBANDO_Core_ControlsSeekRight(husbando_core);
         return;
     }
 
-    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_P)){
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_CONSOLE_KEY_P)){
         HUSBANDO_Core_ControlsPlay(husbando_core);
         return;
     }
+
+    ARC_Queue_Push(container->consoleKeyQueue, (void *)key);
 }
 
 void HUSBANDO_TUIContainer_HandleSearchInput(HUSBANDO_TUIContainer *container){
     ARC_ConsoleKey *key = ARC_ConsoleView_GetCreateConsoleKeyAt(container->view, container->cursor);
-    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_ESC)){
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_CONSOLE_KEY_ESC)){
         ARC_ConsoleView_SetCursorVisibility(container->view, ARC_CONSOLE_VIEW_CURSOR_HIDDEN);
         container->visibleCursor = ARC_False;
         container->inputMode = NORMAL;
@@ -246,7 +244,7 @@ void HUSBANDO_TUIContainer_HandleSearchInput(HUSBANDO_TUIContainer *container){
 
     uint64_t currentConsoleSearchStringLength = strlen(container->consoleSearchString->data);
 
-    if(ARC_ConsoleKey_EqualsPointer(key, ARC_KEY_BACKSPACE)){
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_CONSOLE_KEY_BACKSPACE)){
         if(currentConsoleSearchStringLength == 0){
             return;
         }

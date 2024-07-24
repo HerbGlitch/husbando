@@ -3,13 +3,13 @@
 #include "page.h"
 #include "core/core.h"
 #include "core/controls.h"
-#include "pages/search.h"
 #include "tui/container.h"
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <arc/console/view.h>
 #include <arc/math/rectangle.h>
+#include <arc/std/bool.h>
 #include <arc/std/string.h>
 #include <arc/std/time.h>
 
@@ -84,7 +84,12 @@ void HUSBANDO_TUIBase_Main(HUSBANDO_TUIBase *base){
         //check for enter
         if(base->container->consoleSearchString->data[currentConsoleSearchStringLength - 1] == '\n'){
             base->container->consoleSearchString->data[currentConsoleSearchStringLength - 1] = '\0';
+            ARC_ConsoleView_SetCursorVisibility(base->container->view, ARC_CONSOLE_VIEW_CURSOR_HIDDEN);
+            base->container->visibleCursor = ARC_False;
+            base->container->inputMode = SEARCH;
             HUSBANDO_TUIContainer_AddPage(base->container, HUSBANDO_TUI_PAGE_ID_SEARCH);
+
+            HUSBANDO_TUIContainer_ClearConsoleKeyQueue(base->container);
         }
 
         ARC_ConsoleView_RenderStringAt(base->view, base->container->consoleSearchString, (ARC_Point){ bounds.x + bounds.w - 63, bounds.y + 2 });
