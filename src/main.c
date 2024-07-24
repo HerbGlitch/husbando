@@ -1,6 +1,5 @@
 /* testing allanime */
 //#include "core/provider.h"
-/*
 #include "core/show.h"
 #include "provider/allanime/provider.h"
 #include <stdio.h>
@@ -41,10 +40,10 @@ int main(int32_t argc, char **argv){
 
     return 0;
 }
-*/
 /* end testing */
 
 /* testing tui */
+/*
 #include "config.h"
 #include "core/core.h"
 #include "tui/container.h"
@@ -80,4 +79,5 @@ int main(int argc, char *argv[]){
     HUSBANDO_Config_Deinit();
     return 0;
 }
+*/
 /* end testing*/

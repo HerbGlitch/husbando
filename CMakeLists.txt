@@ -16,6 +16,7 @@ add_compile_options(
 set(ARCHEUS_STD_CONSOLE_BACKEND "NCURSES" CACHE STRING "use ncurses")
 set(ARCHEUS_STD_SSH_BACKEND     "LIBSSH"  CACHE STRING "use libssh" )
 
+find_package(json-c CONFIG REQUIRED)
 add_subdirectory(lib/arc)
 
 add_executable(husbando
@@ -49,4 +50,4 @@ target_include_directories(husbando
     lib/inih
 )
 
-target_link_libraries(husbando PUBLIC archeus_std curl)
+target_link_libraries(husbando PUBLIC archeus_std curl json-c::json-c)

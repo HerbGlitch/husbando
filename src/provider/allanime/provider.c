@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
+#include <json-c/json.h>
 #include <arc/std/errno.h>
 #include <arc/std/string.h>
 #include <arc/std/vector.h>
@@ -131,28 +132,7 @@ ARC_Vector *HUSBANDO_Allanime_Search(HUSBANDO_CoreProvider *provider, ARC_String
     ARC_String *curlResponse;
     HUSBANDO_Allanime_GetCurlResponse(&curlResponse, url);
 
-    //NOTE: don't need to check ARC string find functions for errors as curlResponse and cstring will never be NULL
-    uint64_t startBracketIndex = ARC_String_FindCStringWithStrlen(curlResponse, "[");
-    uint64_t endBracketIndex = ARC_String_FindBackCStringWithStrlen(curlResponse, "]");
-    if(startBracketIndex == ~(uint64_t)0 || endBracketIndex == ~(uint64_t)0){
-        //could not find array in json of ids
-        arc_errno = ARC_ERRNO_DATA;
-        ARC_DEBUG_ERR("in HUSBANDO_Allanime_Search(name), couldn't find array in json, so probably malformed data");
-        ARC_String_Destroy(curlResponse);
-        return NULL;
-    }
-
-    if(startBracketIndex >= endBracketIndex){
-        arc_errno = ARC_ERRNO_DATA;
-        ARC_DEBUG_ERR("in HUSBANDO_Allanime_Search(name), start bracked found after end bracket");
-        ARC_String_Destroy(curlResponse);
-        return NULL;
-    }
-
-    //strip the brakets from the json
-    ARC_String *currentString;
-    ARC_String_CopySubstring(&currentString, curlResponse, startBracketIndex, endBracketIndex - startBracketIndex - 1);
-
+    //create the return vector
     ARC_Vector *providerShows;
     ARC_Vector_Create(&providerShows);
 
@@ -165,131 +145,92 @@ ARC_Vector *HUSBANDO_Allanime_Search(HUSBANDO_CoreProvider *provider, ARC_String
         NULL, NULL
     };
 
-    while(currentString != NULL){
-        //NOTE: don't need to check ARC string find functions for errors as currentString and cstring will never be NULL
-        uint64_t startLabelStringIndex = ARC_String_FindCStringWithStrlen(currentString, "\"");
-        uint64_t endLabelStringIndex = ARC_String_FindCStringWithStrlen(currentString, "\":");
-        if(startLabelStringIndex == ~(uint64_t)0 || endLabelStringIndex == ~(uint64_t)0){
-            break;
-        }
-
-        //check if label is like :{ and we want to skip that type of label
-        if(currentString->data[endLabelStringIndex + 1] == '{'){
-            ARC_String *tempString = currentString;
-            ARC_String_CopySubstring(&currentString, tempString, endLabelStringIndex + 2, tempString->length - endLabelStringIndex - 2);
-            ARC_String_Destroy(tempString);
-            continue;
-        }
-
-        //NOTE: don't need to check ARC string find functions for errors as currentString and cstring will never be NULL
-        uint64_t startKeyStringIndex = ARC_String_FindCStringWithStrlen(currentString, ":");
-        uint64_t endKeyStringIndex = ARC_String_FindCStringWithStrlen(currentString, ",");
-        //this might be the end where there is a } instead of a , so check if that is the case
-        if(endKeyStringIndex == ~(uint64_t)0){
-            endKeyStringIndex = ARC_String_FindCStringWithStrlen(currentString, "}");
-        }
-
-        //couldn't find the key so break
-        if(startKeyStringIndex == ~(uint64_t)0 || endKeyStringIndex == ~(uint64_t)0){
-            break;
-        }
-
-        //strip the label
-        ARC_String *labelString;
-        ARC_String_CopySubstring(&labelString, currentString, startLabelStringIndex, endLabelStringIndex - startLabelStringIndex - 1);
-
-        //strip the key
-        ARC_String *keyString;
-        ARC_String_CopySubstring(&keyString, currentString, startKeyStringIndex, endKeyStringIndex - startKeyStringIndex - 1);
-
-        //remove the stripped section from the current string
-        if(endKeyStringIndex != currentString->length){
-            ARC_String *tempString = currentString;
-            ARC_String_CopySubstring(&currentString, tempString, endKeyStringIndex, tempString->length - endKeyStringIndex);
-            ARC_String_Destroy(tempString);
-        }
-        else {
-            //we hit the end of the string so delete it
-            ARC_String_Destroy(currentString);
-            currentString = NULL;
-        }
-
-        //set the id
-        if(ARC_String_EqualsCStringWithStrlen(labelString, "_id")){
-            ARC_String *tempString = keyString;
-            ARC_String_StripEnds(&keyString, tempString, '"');
-            providerShow.providerId = keyString;
-
-            //cleanup
-            //NOTE: key does not need to be cleaned up here because it is stored in providerShow, providerShow needs to clean it up
-            ARC_String_Destroy(tempString);
-            ARC_String_Destroy(labelString);
-            continue;
-        }
-
-        //set the name
-        if(ARC_String_EqualsCStringWithStrlen(labelString, "name")){
-            ARC_String *tempString = keyString;
-            ARC_String_StripEnds(&keyString, tempString, '"');
-            providerShow.name = keyString;
-
-            //cleanup
-            //NOTE: key does not need to be cleaned up here because it is stored in providerShow, providerShow needs to clean it up
-            ARC_String_Destroy(tempString);
-            ARC_String_Destroy(labelString);
-            continue;
-        }
-
-        if(ARC_String_EqualsCStringWithStrlen(labelString, "sub")){
-            providerShow.subTotalEpisodes = (uint32_t)ARC_String_ToUint64_t(keyString);
-
-            //cleanup
-            ARC_String_Destroy(labelString);
-            ARC_String_Destroy(keyString);
-            continue;
-        }
-
-        if(ARC_String_EqualsCStringWithStrlen(labelString, "dub")){
-            providerShow.dubTotalEpisodes = (uint32_t)ARC_String_ToUint64_t(keyString);
-
-            //cleanup
-            ARC_String_Destroy(labelString);
-            ARC_String_Destroy(keyString);
-            continue;
-        }
-
-        //discard raw, IDK what this is
-        if(ARC_String_EqualsCStringWithStrlen(labelString, "raw")){
-            //cleanup
-            ARC_String_Destroy(labelString);
-            ARC_String_Destroy(keyString);
-            continue;
-        }
-
-        //TODO: might want to make sure the type is a show later, for now skip
-        //NOTE: this is the last tag so we will store the providerShow details here into the vector
-        if(ARC_String_EqualsCStringWithStrlen(labelString, "__typename")){
-            //store the complete provider show
-            HUSBANDO_CoreProviderShow *completeProviderShow = (HUSBANDO_CoreProviderShow *)malloc(sizeof(HUSBANDO_CoreProviderShow));
-            *completeProviderShow = providerShow;
-            ARC_String_Copy(&(completeProviderShow->language), language);
-            ARC_Vector_Add(providerShows, (void *)completeProviderShow);
-
-            //cleanup
-            ARC_String_Destroy(labelString);
-            ARC_String_Destroy(keyString);
-            continue;
-        }
-
-        ARC_String_Destroy(labelString);
-        ARC_String_Destroy(keyString);
-        break;
+    json_object *root = json_tokener_parse(curlResponse->data);
+    if(!root){
+        return providerShows;
     }
+
+    json_object *data = json_object_object_get(root, "data");
+    if(json_object_get_type(data) == json_type_null){
+        //TODO: arc_errno stuffs?
+        json_object_put(root);
+        return providerShows;
+    }
+
+    json_object *shows = json_object_object_get(data, "shows");
+    if(json_object_get_type(shows) == json_type_null){
+        //TODO: arc_errno stuffs?
+        json_object_put(root);
+        return providerShows;
+    }
+
+    json_object *edges = json_object_object_get(shows, "edges");
+    if(json_object_get_type(shows) == json_type_null){
+        //TODO: arc_errno stuffs?
+        json_object_put(root);
+        return providerShows;
+    }
+
+    uint32_t edgesSize = json_object_array_length(edges);
+    if(edgesSize == 0){
+        //TODO: arc_errno stuffs?
+        json_object_put(root);
+        return providerShows;
+    }
+
+    for(uint32_t index = 0; index < edgesSize; index++){
+        json_object *edge = json_object_array_get_idx(edges, index);
+
+        json_object *id = json_object_object_get(edge, "_id");
+        if(json_object_get_type(id) == json_type_null){
+            //TODO: arc_errno stuffs?
+            continue;
+        }
+
+        json_object *name = json_object_object_get(edge, "name");
+        if(json_object_get_type(name) == json_type_null){
+            //TODO: arc_errno stuffs?
+            continue;
+        }
+
+        json_object *availableEpisodes = json_object_object_get(edge, "availableEpisodes");
+        if(json_object_get_type(availableEpisodes) == json_type_null){
+            //TODO: arc_errno stuffs?
+            continue;
+        }
+
+        json_object *sub = json_object_object_get(availableEpisodes, "sub");
+        if(json_object_get_type(sub) == json_type_null){
+            //TODO: arc_errno stuffs?
+            continue;
+        }
+
+        json_object *dub = json_object_object_get(availableEpisodes, "dub");
+        if(json_object_get_type(dub) == json_type_null){
+            //TODO: arc_errno stuffs?
+            continue;
+        }
+
+        //all data was found, so create and store the show
+        HUSBANDO_CoreProviderShow *completeProviderShow = (HUSBANDO_CoreProviderShow *)malloc(sizeof(HUSBANDO_CoreProviderShow));
+        *completeProviderShow = providerShow;
+
+        const char *idCString   = json_object_get_string(id);
+        const char *nameCString = json_object_get_string(name);
+
+        ARC_String_CreateWithStrlen(&(completeProviderShow->providerId), (char *)idCString);
+        ARC_String_CreateWithStrlen(&(completeProviderShow->name)      , (char *)nameCString);
+
+        completeProviderShow->subTotalEpisodes = json_object_get_uint64(sub);
+        completeProviderShow->dubTotalEpisodes = json_object_get_uint64(dub);
+
+        ARC_String_Copy(&(completeProviderShow->language), language);
+        ARC_Vector_Add(providerShows, (void *)completeProviderShow);
+    }
+
+    json_object_put(root);
 
     //cleanup
-    if(currentString != NULL){
-        ARC_String_Destroy(currentString);
-    }
     ARC_String_Destroy(curlResponse);
 
     return providerShows;
