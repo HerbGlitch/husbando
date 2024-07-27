@@ -40,19 +40,6 @@ typedef struct HUSBANDO_CoreProviderShow {
     void       *providerData;
 } HUSBANDO_CoreProviderShow;
 
-/**
- * @breif a struct that holds all of the data relating to an episode of a show
- *
- * @TODO: might want to have episode specific ratings and notes
-*/
-typedef struct HUSBANDO_CoreProviderEpisode {
-    ARC_String *title;
-    ARC_String *url;
-    uint32_t currentEpisode;
-
-    void *providerData;
-} HUSBANDO_CoreProviderEpisode;
-
 #ifdef __cplusplus
 }
 #endif

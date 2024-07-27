@@ -1,6 +1,7 @@
 #ifndef HUSBANDO_CORE_PROVIDER_H_
 #define HUSBANDO_CORE_PROVIDER_H_
 
+#include "episode.h"
 #include "show.h"
 #include <stdint.h>
 #include <arc/std/bool.h>

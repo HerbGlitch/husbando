@@ -1,7 +1,9 @@
 #include "provider.h"
 
+#include "core/episode.h"
 #include "core/provider.h"
 #include "core/show.h"
+#include <json_object.h>
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
@@ -34,6 +36,8 @@ void HUSBANDO_CoreProvider_DestroyAllanimeProvider(HUSBANDO_CoreProvider *provid
         ARC_String_Destroy((ARC_String *)ARC_Vector_Get(data->resolutionUrls, index));
     }
     ARC_Vector_Destroy(data->resolutionUrls);
+
+    free(provider->data);
 
     free(provider);
 }
@@ -228,9 +232,9 @@ ARC_Vector *HUSBANDO_Allanime_Search(HUSBANDO_CoreProvider *provider, ARC_String
         ARC_Vector_Add(providerShows, (void *)completeProviderShow);
     }
 
+    //cleanup
     json_object_put(root);
 
-    //cleanup
     ARC_String_Destroy(curlResponse);
 
     return providerShows;
@@ -277,140 +281,172 @@ HUSBANDO_CoreProviderEpisode *HUSBANDO_Allanime_GetEpisode(HUSBANDO_CoreProvider
     ARC_String *curlResponse;
     HUSBANDO_Allanime_GetCurlResponse(&curlResponse, url);
 
-    //NOTE: don't need to check ARC string find functions for errors as curlResponse and cstring will never be NULL
-    uint64_t startBracketIndex = ARC_String_FindCStringWithStrlen(curlResponse, "[");
-    uint64_t endBracketIndex = ARC_String_FindBackCStringWithStrlen(curlResponse, "]");
-    if(startBracketIndex == ~(uint64_t)0 || endBracketIndex == ~(uint64_t)0){
-        //could not find array in json of ids
-        arc_errno = ARC_ERRNO_DATA;
-        ARC_DEBUG_ERR("in temp(), couldn't find array in json, so probably malformed data");
+    json_object *root;
+    root = json_tokener_parse(curlResponse->data);
+    ARC_String_Destroy(curlResponse);
+    if(!root){
+        //TODO: arc_errno stuffs?
+        json_object_put(root);
         return NULL;
     }
 
-    if(startBracketIndex >= endBracketIndex){
-        arc_errno = ARC_ERRNO_DATA;
-        ARC_DEBUG_ERR("in temp(), start bracked found after end bracket");
+    json_object *data = json_object_object_get(root, "data");
+    if(json_object_get_type(data) == json_type_null){
+        //TODO: arc_errno stuffs?
+        json_object_put(root);
         return NULL;
     }
 
-    //strip the brakets from the json
-    ARC_String *currentString;
-    ARC_String_CopySubstring(&currentString, curlResponse, startBracketIndex, endBracketIndex - startBracketIndex - 1);
+    json_object *episodeJson = json_object_object_get(data, "episode");
+    if(json_object_get_type(episodeJson) == json_type_null){
+        //TODO: arc_errno stuffs?
+        json_object_put(root);
+        return NULL;
+    }
 
-    HUSBANDO_CoreProviderEpisode *episode = (HUSBANDO_CoreProviderEpisode *)malloc(sizeof(HUSBANDO_CoreProviderEpisode));
-    episode->currentEpisode = episodeNumber;
+    json_object *episodeString = json_object_object_get(episodeJson, "episodeString");
+    if(json_object_get_type(episodeString) == json_type_null){
+        //TODO: arc_errno stuffs?
+        json_object_put(root);
+        return NULL;
+    }
 
-    while(currentString != NULL){
-        //NOTE: don't need to check ARC string find functions for errors as currentString and cstring will never be NULL
-        uint64_t startLabelStringIndex = ARC_String_FindCStringWithStrlen(currentString, "\"");
-        uint64_t endLabelStringIndex = ARC_String_FindCStringWithStrlen(currentString, "\":");
-        if(startLabelStringIndex == ~(uint64_t)0 || endLabelStringIndex == ~(uint64_t)0){
-            break;
-        }
+    json_object *sourceUrls = json_object_object_get(episodeJson, "sourceUrls");
+    if(json_object_get_type(sourceUrls) == json_type_null){
+        //TODO: arc_errno stuffs?
+        json_object_put(root);
+        return NULL;
+    }
 
-        //check if label is like :{ and we want to skip that type of label
-        if(currentString->data[endLabelStringIndex + 1] == '{'){
-            ARC_String *tempString = currentString;
-            ARC_String_CopySubstring(&currentString, tempString, endLabelStringIndex + 2, tempString->length - endLabelStringIndex - 2);
-            ARC_String_Destroy(tempString);
+    uint32_t sourceUrlsSize = json_object_array_length(sourceUrls);
+    if(sourceUrlsSize == 0){
+        //TODO: arc_errno stuffs?
+        json_object_put(root);
+        return NULL;
+    }
+
+    for(uint32_t index = 0; index < sourceUrlsSize; index++){
+        json_object *sourceUrl = json_object_array_get_idx(sourceUrls, index);
+
+        json_object *sourceUrlJson = json_object_object_get(sourceUrl, "sourceUrl");
+        if(json_object_get_type(sourceUrlJson) == json_type_null){
             continue;
         }
 
-        //NOTE: don't need to check ARC string find functions for errors as currentString and cstring will never be NULL
-        uint64_t startKeyStringIndex = ARC_String_FindCStringWithStrlen(currentString, ":");
-        uint64_t endKeyStringIndex = ARC_String_FindCStringWithStrlen(currentString, ",");
-        //this might be the end where there is a } instead of a , so check if that is the case
-        if(endKeyStringIndex == ~(uint64_t)0){
-            endKeyStringIndex = ARC_String_FindCStringWithStrlen(currentString, "}");
+        json_object *sourceName = json_object_object_get(sourceUrl, "sourceName");
+        if(json_object_get_type(sourceName) == json_type_null){
+            continue;
         }
 
-        //couldn't find the key so break
-        if(startKeyStringIndex == ~(uint64_t)0 || endKeyStringIndex == ~(uint64_t)0){
-            break;
+        json_object *sourceType = json_object_object_get(sourceUrl, "type");
+        if(json_object_get_type(sourceType) == json_type_null){
+            continue;
         }
 
-        //strip the label
-        ARC_String *labelString;
-        ARC_String_CopySubstring(&labelString, currentString, startLabelStringIndex, endLabelStringIndex - startLabelStringIndex - 1);
+        json_object *streamerId = json_object_object_get(sourceUrl, "streamerId");
+        if(json_object_get_type(streamerId) == json_type_null){
+            continue;
+        }
 
-        //strip the key
-        ARC_String *keyString;
-        ARC_String_CopySubstring(&keyString, currentString, startKeyStringIndex, endKeyStringIndex - startKeyStringIndex - 1);
+        //TODO: probably want to do something with sourceName, sourceType, and streamerId
 
-        //remove the stripped section from the current string
-        if(endKeyStringIndex != currentString->length){
-            ARC_String *tempString = currentString;
-            ARC_String_CopySubstring(&currentString, tempString, endKeyStringIndex, tempString->length - endKeyStringIndex);
-            ARC_String_Destroy(tempString);
+        //TODO: might want to check to see if this has a length
+        const char *sourceUrlCString = json_object_get_string(sourceUrlJson);
+
+        ARC_String *sourceUrlString;
+        if(sourceUrlCString[0] == '-' && sourceUrlCString[1] == '-'){
+            ARC_String_Create(&sourceUrlString, (char *)(sourceUrlCString + 2), strlen(sourceUrlCString) - 2);
         }
         else {
-            //we hit the end of the string so delete it
-            ARC_String_Destroy(currentString);
-            currentString = NULL;
+            ARC_String_CreateWithStrlen(&sourceUrlString, (char *)sourceUrlCString);
         }
 
-        //set the id
-        if(ARC_String_EqualsCStringWithStrlen(labelString, "sourceUrl")){
-            ARC_String *tempString = keyString;
-            ARC_String_StripEnds(&keyString, tempString, '"');
+        //substitue and check provider show id
+        ARC_String *showId;
+        HUSBANDO_Allanime_SubstitueId(&showId, sourceUrlString);
+        ARC_String_ReplaceMatchingCStringWithStrlen(&showId, "/clock", "/clock.json");
+        ARC_String_Destroy(sourceUrlString);
 
-            //two dashes, -- in source url
-            if(keyString->length >= 3 && keyString->data[0] == '-' && keyString->data[1] == '-'){
-                ARC_String *tempString = keyString;
-                ARC_String_CopySubstring(&keyString, tempString, 2, tempString->length - 2);
-                ARC_String_Destroy(tempString);
-
-                ARC_String *showId;
-                HUSBANDO_Allanime_SubstitueId(&showId, keyString);
-
-                ARC_String_ReplaceMatchingCStringWithStrlen(&showId, "/clock", "/clock.json");
-
-                if(showId->data[0] != '?'){
-                    ARC_Vector_Add(providerData->resolutionUrls, (void *)showId);
-                }
-                else {
-                    ARC_String_Destroy(showId);
-                }
-            }
-
-            //cleanup
-            ARC_String_Destroy(tempString);
-            ARC_String_Destroy(labelString);
+        //TODO: might want to handle this a bit better
+        if(showId->data[0] != '?'){
+            //don't need to free if added to the resolution urls
+            ARC_Vector_Add(providerData->resolutionUrls, (void *)showId);
             continue;
         }
 
-        ARC_String_Destroy(labelString);
-        ARC_String_Destroy(keyString);
+        ARC_String_Destroy(showId);
     }
 
+    json_object_put(root);
+
+    //TODO: select the id in a better way
     ARC_String *providerId = (ARC_String *)ARC_Vector_Get(providerData->resolutionUrls, 0);
 
-    ARC_String *tempCurlResponse;
+    //get the video url
+    ARC_String *episodeUrl;
     char tempUrl[strlen("https://" HUSBANDO_ALLANIME_BASE) + providerId->length + 1];
     sprintf(tempUrl, "%s%s", "https://" HUSBANDO_ALLANIME_BASE, providerId->data);
     tempUrl[strlen("https://" HUSBANDO_ALLANIME_BASE) + providerId->length] = '\0';
-//    printf("TEMPURL: \"%s\"\n", tempUrl);
-    HUSBANDO_Allanime_GetCurlResponse(&tempCurlResponse, tempUrl);
+    HUSBANDO_Allanime_GetCurlResponse(&episodeUrl, tempUrl);
 
-    //strip the url
-    ARC_String *episodeUrl;
-    uint64_t urlStartIndex = ARC_String_FindCStringWithStrlen(tempCurlResponse, "\"src\":") + strlen("\"src\":");
-    ARC_String_CopySubstring(&episodeUrl, tempCurlResponse, urlStartIndex, tempCurlResponse->length - urlStartIndex);
+    root = json_tokener_parse(episodeUrl->data);
+    ARC_String_Destroy(episodeUrl);
+    if(!root){
+        //TODO: arc_errno stuffs?
+        json_object_put(root);
+        return NULL;
+    }
 
-    uint64_t urlEndSize = ARC_String_FindCStringWithStrlen(episodeUrl, "\"");
-    ARC_String *tempString = episodeUrl;
-    ARC_String_CopySubstring(&episodeUrl, tempString, 0, urlEndSize - 1);
-    ARC_String_Destroy(tempString);
+    json_object *links = json_object_object_get(root, "links");
+    if(json_object_get_type(links) == json_type_null){
+        //TODO: arc_errno stuffs?
+        json_object_put(root);
+        return NULL;
+    }
 
-    episode->url = episodeUrl;
+    uint32_t linksSize = json_object_array_length(links);
+    if(linksSize == 0){
+        //TODO: arc_errno stuffs?
+        json_object_put(root);
+        return NULL;
+    }
 
-    ARC_String_Destroy(tempCurlResponse);
+    HUSBANDO_CoreProviderEpisode *episode;
+    HUSBANDO_CoreProviderEpisode_CreateEmpty(&episode);
+
+    for(uint32_t index = 0; index < linksSize; index++){
+        json_object *sourceLink = json_object_array_get_idx(links, index);
+
+        json_object *sourceLinkLink = json_object_object_get(sourceLink, "link");
+        if(json_object_get_type(sourceLinkLink) == json_type_null){
+            continue;
+        }
+
+        json_object *sourceMp4 = json_object_object_get(sourceLink, "mp4");
+        if(json_object_get_type(sourceMp4) == json_type_null){
+            continue;
+        }
+
+        json_object *sourceResolution = json_object_object_get(sourceLink, "resolutionStr");
+        if(json_object_get_type(sourceResolution) == json_type_null){
+            continue;
+        }
+
+        json_object *sourceSrc = json_object_object_get(sourceLink, "src");
+        if(json_object_get_type(sourceSrc) != json_type_null){
+            //TODO: do smthn with this?
+        }
+
+        const char *episodeUrlCString = json_object_get_string(sourceLinkLink);
+
+        ARC_String *episodeUrl;
+        ARC_String_CreateWithStrlen(&episodeUrl, (char *)episodeUrlCString);
+
+        ARC_Vector_Add(episode->urls, (void *)episodeUrl);
+    }
 
     //cleanup
-    if(currentString != NULL){
-        ARC_String_Destroy(currentString);
-    }
-    ARC_String_Destroy(curlResponse);
+    json_object_put(root);
 
     return episode;
 }

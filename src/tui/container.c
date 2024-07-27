@@ -200,18 +200,10 @@ void HUSBANDO_TUIContainer_HandleNormalInput(HUSBANDO_TUIContainer *container){
         return;
     }
 
-    if(ARC_ConsoleKey_EqualsPointer(key, ARC_CONSOLE_KEY_S)){
+    if(ARC_ConsoleKey_EqualsPointer(key, ARC_CONSOLE_KEY_FORWARD_SLASH)){
         ARC_ConsoleView_SetCursorVisibility(container->view, ARC_CONSOLE_VIEW_CURSOR_VISIBLE);
         container->visibleCursor = ARC_True;
         container->inputMode = SEARCH;
-        return;
-    }
-
-    if(ARC_ConsoleKey_EqualsPointer(key, ARC_CONSOLE_KEY_O)){
-        ARC_String *url;
-        ARC_String_CreateWithStrlen(&url, "https://youtu.be/RjM8d0Csuk4");
-        HUSBANDO_Core_ControlsInit(husbando_core, url, ARC_True);
-        ARC_String_Destroy(url);
         return;
     }
 

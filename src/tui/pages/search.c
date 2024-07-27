@@ -111,7 +111,13 @@ void HUSBANDO_TUIPage_MainSearch(ARC_ConsoleView *view, void *data){
 
             HUSBANDO_CoreProviderShow *show = (HUSBANDO_CoreProviderShow *)ARC_Vector_Get(searchData->shows, searchData->selectedIndex);
             HUSBANDO_CoreProviderEpisode *episode = husbando_core->provider->getEpisodeFn(husbando_core->provider, show, 1);
-            HUSBANDO_Core_ControlsInit(husbando_core, episode->url, ARC_True);
+
+            if(ARC_Vector_Size(episode->urls) == 0){
+                continue;
+            }
+
+            ARC_String *url = ARC_Vector_Get(episode->urls, 0);
+            HUSBANDO_Core_ControlsInit(husbando_core, url, ARC_True);
             continue;
         }
 

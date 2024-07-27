@@ -1,5 +1,7 @@
 /* testing allanime */
+/*
 //#include "core/provider.h"
+#include "core/episode.h"
 #include "core/show.h"
 #include "provider/allanime/provider.h"
 #include <stdio.h>
@@ -12,6 +14,7 @@ int main(int32_t argc, char **argv){
     HUSBANDO_CoreProvider_CreateAllanimeProvider(&provider);
 
     ARC_String *name;
+    //ARC_String_CreateWithStrlen(&name, "d-frag");
     ARC_String_CreateWithStrlen(&name, "tanya");
 
     ARC_String *language;
@@ -34,16 +37,22 @@ int main(int32_t argc, char **argv){
 
     HUSBANDO_CoreProvider_DestroyAllanimeProvider(provider);
 
-    printf("url: %s\n", episode->url->data);
-    ARC_String_Destroy(episode->url);
-    free(episode);
+    if(ARC_Vector_Size(episode->urls) != 0){
+        ARC_String *url = (ARC_String *)ARC_Vector_Get(episode->urls, 0);
+        printf("url: %s\n", url->data);
+    }
+    else {
+        printf("episodes are empty\n");
+    }
+
+    HUSBANDO_CoreProviderEpisode_Destroy(episode);
 
     return 0;
 }
+*/
 /* end testing */
 
 /* testing tui */
-/*
 #include "config.h"
 #include "core/core.h"
 #include "tui/container.h"
@@ -79,5 +88,4 @@ int main(int argc, char *argv[]){
     HUSBANDO_Config_Deinit();
     return 0;
 }
-*/
 /* end testing*/

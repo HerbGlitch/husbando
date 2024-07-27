@@ -25,6 +25,7 @@ add_executable(husbando
 
     src/core/controls.c
     src/core/core.c
+    src/core/episode.c
 
     src/provider/allanime/provider.c
 

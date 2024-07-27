@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include "core/episode.h"
 #include "core/provider.h"
 #include <arc/std/string.h>
 #include <arc/std/vector.h>
