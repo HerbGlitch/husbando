@@ -19,7 +19,7 @@ void HUSBANDO_Config_Init(const char *path){
     }
 }
 
-void HUSBANDO_Config_Deinit(){
+void HUSBANDO_Config_Deinit(void){
     //clean up main
     if(husbando_config.Main.configPath != NULL){
         free((void *)husbando_config.Main.configPath);

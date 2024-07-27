@@ -21,7 +21,7 @@ void HUSBANDO_TUIPage_CreateIndex(HUSBANDO_TUIPage **page, HUSBANDO_TUIContainer
     //create page index data
     HUSBANDO_TUIPageIndexData *indexData = (HUSBANDO_TUIPageIndexData *)malloc(sizeof(HUSBANDO_TUIPageIndexData));
     indexData->container = container;
-    HUSBANDO_TUIBase_Create(&(indexData->base), (ARC_Rect){ bounds.x, bounds.y, bounds.w, 5 }, container->title);
+    HUSBANDO_TUIBase_Create(&(indexData->base), container, (ARC_Rect){ bounds.x, bounds.y, bounds.w, 5 }, container->title);
     (*page)->data = (void *)indexData;
 
     //outline the page
@@ -38,6 +38,9 @@ void HUSBANDO_TUIPage_CreateIndex(HUSBANDO_TUIPage **page, HUSBANDO_TUIContainer
 }
 
 void HUSBANDO_TUIPage_DestroyIndex(HUSBANDO_TUIPage *page){
+    HUSBANDO_TUIPageIndexData *indexData = (HUSBANDO_TUIPageIndexData *)(page->data);
+    free(indexData);
+
     HUSBANDO_TUIPage_Destroy(page);
 }
 
