@@ -25,3 +25,5 @@ libcurl
 ncurses
 
 inih //this one is pulled as a submodule
+
+json-c
