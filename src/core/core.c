@@ -28,6 +28,9 @@ void HUSBANDO_Core_Create(HUSBANDO_Core **core, uint8_t playerId, uint8_t provid
 
     (*core)->player     = NULL;
     (*core)->playerId   = 0;
+
+    (*core)->currentEpisode = NULL;
+
     HUSBANDO_Core_SetPlayer(*core, playerId);
     HUSBANDO_Core_SetProvider(*core, providerId);
 }

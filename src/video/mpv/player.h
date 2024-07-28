@@ -21,12 +21,14 @@ extern "C" {
 /*
  * @brief controls
 */
-#define HUSBANDO_MPV_PLAYER_SHOW_TIME  "echo 'show-text ${playback-time}' | socat - "
-#define HUSBANDO_MPV_PLAYER_SEEK_RIGHT "echo 'seek 5' | socat - "
-#define HUSBANDO_MPV_PLAYER_SEEK_LEFT  "echo 'seek -5' | socat - "
-#define HUSBANDO_MPV_PLAYER_PLAY       "echo 'play' | socat - "
-#define HUSBANDO_MPV_PLAYER_PAUSE      "echo 'pause' | socat - "
-#define HUSBANDO_MPV_PLAYER_PLAY_PAUSE "echo 'cycle pause' | socat - "
+#define HUSBANDO_MPV_PLAYER_SHOW_TIME         "echo 'show-text ${playback-time}' | socat - "
+#define HUSBANDO_MPV_PLAYER_SEEK_RIGHT        "echo 'seek 5' | socat - "
+#define HUSBANDO_MPV_PLAYER_SEEK_LEFT         "echo 'seek -5' | socat - "
+#define HUSBANDO_MPV_PLAYER_PLAY              "echo 'play' | socat - "
+#define HUSBANDO_MPV_PLAYER_PAUSE             "echo 'pause' | socat - "
+#define HUSBANDO_MPV_PLAYER_PLAY_PAUSE        "echo 'cycle pause' | socat - "
+#define HUSBANDO_MPV_PLAYER_GET_TIME_POSITION "echo '{ \"command\": [\"get_property\", \"time-pos\"] }' | socat - "
+#define HUSBANDO_MPV_PLAYER_GET_TOTAL_TIME    "echo '{ \"command\": [\"get_property\", \"duration\"] }' | socat - "
 
 /**
  * @breif creates the core of husbando, will init a player as well as a ssh connect (if the config defaults to connect), also loads in notes

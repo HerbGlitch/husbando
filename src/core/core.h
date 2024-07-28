@@ -1,6 +1,7 @@
 #ifndef HUSBANDO_CORE_H_
 #define HUSBANDO_CORE_H_
 
+#include "episode.h"
 #include "player.h"
 #include "provider.h"
 #include <stdint.h>
@@ -37,6 +38,8 @@ typedef struct HUSBANDO_Core {
 
     HUSBANDO_CoreProvider *provider;
     uint8_t                providerId;
+
+    HUSBANDO_CoreProviderEpisode *currentEpisode;
 } HUSBANDO_Core;
 
 /**

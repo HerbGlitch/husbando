@@ -1,11 +1,14 @@
 #include "player.h"
 
+#include "arc/networking/ssh.h"
+#include "arc/std/string.h"
 #include "config.h"
 #include "core/core.h"
 #include "core/player.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <json-c/json.h>
 #include <sys/socket.h>
 #include <arc/std/bool.h>
 #include <arc/std/time.h>
@@ -35,6 +38,11 @@ void HUSBANDO_CorePlayer_CreateMPVPlayer(HUSBANDO_CorePlayer **player){
 }
 
 void HUSBANDO_CorePlayer_DestroyMPVPlayer(HUSBANDO_CorePlayer *player){
+    //TODO: might need to disconnect from socket?
+    HUSBANDO_MPV_Data *mpvData = (HUSBANDO_MPV_Data *)player->data;
+    free(mpvData);
+
+    free(player);
 }
 
 void HUSBANDO_MPV_InitFn(HUSBANDO_Core *core, ARC_String *url, ARC_Bool autoPlay){
@@ -112,10 +120,90 @@ void HUSBANDO_MPV_SeekLeftFn(HUSBANDO_Core *core){
 }
 
 ARC_Time HUSBANDO_MPV_GetCurrentTimeFn(HUSBANDO_Core *core){
+    ARC_Time currentTime = (ARC_Time){ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    if(core->currentEpisode == NULL){
+        return currentTime;
+    }
+
+    char command[strlen(HUSBANDO_MPV_PLAYER_GET_TIME_POSITION) + strlen(husbando_config.Mpv.socketName)];
+    sprintf(command, "%s%s", HUSBANDO_MPV_PLAYER_GET_TIME_POSITION, husbando_config.Mpv.socketName);
+
+    if(core->ssh != NULL){
+        ARC_String *responseString = ARC_Ssh_ExecStrInNewSessionAndGetResponse(core->ssh, command);
+        if(responseString == NULL){
+            return currentTime;
+        }
+
+        json_object *root = json_tokener_parse(responseString->data);
+        ARC_String_Destroy(responseString);
+        if(!root){
+            json_object_put(root);
+            return currentTime;
+        }
+
+        json_object *secondsJson = json_object_object_get(root, "data");
+        if(json_object_get_type(secondsJson) == json_type_null){
+            json_object_put(root);
+            return currentTime;
+        }
+
+        uint32_t currentTimeInSeconds = (uint32_t)json_object_get_int(secondsJson);
+        if(currentTimeInSeconds != 0){
+            currentTime.seconds = currentTimeInSeconds % 60;
+            currentTime.minutes = (currentTimeInSeconds / 60) % 60;
+            currentTime.hour    = (currentTimeInSeconds / 60) / 60;
+        }
+
+        json_object_put(root);
+
+        return currentTime;
+    }
+
+    //TODO: get time from local player
     return (ARC_Time){ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 }
 
 ARC_Time HUSBANDO_MPV_GetFullTimeFn(HUSBANDO_Core *core){
+    ARC_Time currentTime = (ARC_Time){ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    if(core->currentEpisode == NULL){
+        return currentTime;
+    }
+
+    char command[strlen(HUSBANDO_MPV_PLAYER_GET_TOTAL_TIME) + strlen(husbando_config.Mpv.socketName)];
+    sprintf(command, "%s%s", HUSBANDO_MPV_PLAYER_GET_TOTAL_TIME, husbando_config.Mpv.socketName);
+
+    if(core->ssh != NULL){
+        ARC_String *responseString = ARC_Ssh_ExecStrInNewSessionAndGetResponse(core->ssh, command);
+        if(responseString == NULL){
+            return currentTime;
+        }
+
+        json_object *root = json_tokener_parse(responseString->data);
+        ARC_String_Destroy(responseString);
+        if(!root){
+            json_object_put(root);
+            return currentTime;
+        }
+
+        json_object *secondsJson = json_object_object_get(root, "data");
+        if(json_object_get_type(secondsJson) == json_type_null){
+            json_object_put(root);
+            return currentTime;
+        }
+
+        uint32_t currentTimeInSeconds = (uint32_t)json_object_get_int(secondsJson);
+        if(currentTimeInSeconds != 0){
+            currentTime.seconds = currentTimeInSeconds % 60;
+            currentTime.minutes = (currentTimeInSeconds / 60) % 60;
+            currentTime.hour    = (currentTimeInSeconds / 60) / 60;
+        }
+
+        json_object_put(root);
+
+        return currentTime;
+    }
+
+    //TODO: get time from local player
     return (ARC_Time){ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 }
 

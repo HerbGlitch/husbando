@@ -2,6 +2,7 @@
 
 #include "core/controls.h"
 #include "core/core.h"
+#include "core/episode.h"
 #include "tui/base.h"
 #include "tui/container.h"
 #include "tui/page.h"
@@ -111,6 +112,12 @@ void HUSBANDO_TUIPage_MainSearch(ARC_ConsoleView *view, void *data){
 
             HUSBANDO_CoreProviderShow *show = (HUSBANDO_CoreProviderShow *)ARC_Vector_Get(searchData->shows, searchData->selectedIndex);
             HUSBANDO_CoreProviderEpisode *episode = husbando_core->provider->getEpisodeFn(husbando_core->provider, show, 1);
+
+            if(husbando_core->currentEpisode != NULL){
+                HUSBANDO_CoreProviderEpisode_Destroy(husbando_core->currentEpisode);
+            }
+
+            husbando_core->currentEpisode = episode;
 
             if(ARC_Vector_Size(episode->urls) == 0){
                 continue;

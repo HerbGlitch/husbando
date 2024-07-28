@@ -68,33 +68,31 @@ void HUSBANDO_TUIContainer_Destory(HUSBANDO_TUIContainer *container){
 
 //private type for polling
 typedef struct HUSBANDO_TUIContainerPollParams {
-    HUSBANDO_TUIPage *page;
-
-    ARC_Bool *running;
-    uint32_t pollTime;
-
-    pthread_mutex_t *bufferMutex;
+    HUSBANDO_TUIContainer *container;
 } HUSBANDO_TUIContainerPollParams;
 
 //private function that runs the polling
 void *HUSBANDO_TUIContainer_RunPoll(void *data){
     HUSBANDO_TUIContainerPollParams *pollParams = (HUSBANDO_TUIContainerPollParams *)data;
 
-    pthread_mutex_lock(pollParams->bufferMutex);
-    ARC_Bool threadRunning = *(pollParams->running);
-    struct timespec sleepTime = { pollParams->pollTime / 1000, (pollParams->pollTime % 1000) * 1000000 };
-    pthread_mutex_unlock(pollParams->bufferMutex);
+    pthread_mutex_lock(&(pollParams->container->bufferMutex));
+    ARC_Bool threadRunning = pollParams->container->running;
+    struct timespec sleepTime = { pollParams->container->pollTime / 1000, (pollParams->container->pollTime % 1000) * 1000000 };
+    pthread_mutex_unlock(&(pollParams->container->bufferMutex));
 
     while(threadRunning){
-        pthread_mutex_lock(pollParams->bufferMutex);
-        pollParams->page->pollFn(pollParams->page->view, pollParams->page->data);
-        pthread_mutex_unlock(pollParams->bufferMutex);
+        pthread_mutex_lock(&(pollParams->container->bufferMutex));
+        HUSBANDO_TUIPage *page = pollParams->container->page;
+        if(page != NULL){
+            page->pollFn(page->view, page->data);
+        }
+        pthread_mutex_unlock(&(pollParams->container->bufferMutex));
 
         nanosleep(&sleepTime, &sleepTime);
 
-        pthread_mutex_lock(pollParams->bufferMutex);
-        threadRunning = *(pollParams->running);
-        pthread_mutex_unlock(pollParams->bufferMutex);
+        pthread_mutex_lock(&(pollParams->container->bufferMutex));
+        threadRunning = pollParams->container->running;
+        pthread_mutex_unlock(&(pollParams->container->bufferMutex));
     }
 
     return NULL;
@@ -107,13 +105,10 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
         return;
     }
 
+    container->running = ARC_True;
+
     HUSBANDO_TUIContainerPollParams pollParams = {
-        container->page,
-
-        &(container->running),
-        container->pollTime,
-
-        &(container->bufferMutex)
+        container
     };
 
     //create and check the poll thread
@@ -130,7 +125,6 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
     pthread_mutex_unlock(&(container->bufferMutex));
 
     //main thread, handle key inputs and exiting
-    container->running = ARC_True;
     while(container->running){
         if(container->nextPageId != HUSBANDO_TUI_PAGE_ID_NONE){
             pthread_mutex_lock(&(container->bufferMutex));
