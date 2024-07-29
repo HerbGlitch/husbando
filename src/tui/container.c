@@ -28,6 +28,7 @@ void HUSBANDO_TUIContainer_Create(HUSBANDO_TUIContainer **container, char *title
     (*container)->title = title;
 
     (*container)->page = page;
+    (*container)->nextPageId = HUSBANDO_TUI_PAGE_ID_NONE;
 
     (*container)->inputMode = NORMAL;
 
@@ -141,6 +142,7 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
         }
 
         //handle input modes
+        pthread_mutex_lock(&(container->bufferMutex));
         switch(container->inputMode){
             case NORMAL:
                 HUSBANDO_TUIContainer_HandleNormalInput(container);
@@ -150,6 +152,7 @@ void HUSBANDO_TUIContainer_RunPage(HUSBANDO_TUIContainer *container){
                 HUSBANDO_TUIContainer_HandleSearchInput(container);
                 break;
         }
+        pthread_mutex_unlock(&(container->bufferMutex));
 
         //update the page with the new input
         pthread_mutex_lock(&(container->bufferMutex));

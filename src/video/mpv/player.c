@@ -159,6 +159,17 @@ ARC_Time HUSBANDO_MPV_GetCurrentTimeFn(HUSBANDO_Core *core){
         return currentTime;
     }
 
+    FILE *file = popen(command, "r");
+    if(file == NULL){
+        // error processing and return
+        return (ARC_Time){ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    }
+
+    char buffer[256] ;
+    while(fgets(buffer, 256, file) != NULL){
+        // process a line
+    }
+
     //TODO: get time from local player
     return (ARC_Time){ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 }
