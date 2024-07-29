@@ -36,6 +36,7 @@ add_executable(husbando
     src/tui/pages/notes.c
     src/tui/pages/search.c
 
+    src/video/cvlc/player.c
     src/video/mpv/player.c
 
     #inih stuff

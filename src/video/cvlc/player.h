@@ -11,22 +11,20 @@ extern "C" {
 #endif
 
 //TODO: make this compatable with windows
-#define HUSBANDO_CVLC_COMMAND_SOCKET_FLAG " --input-ipc-server="
-#define HUSBANDO_CVLC_COMMAND_START       "mpv "
-#define HUSBANDO_CVLC_COMMAND_END         " --no-terminal & disown"
+#define HUSBANDO_CVLC_COMMAND_START       "cvlc -q "
+#define HUSBANDO_CVLC_COMMAND_END         " 2> /dev/null & disown"
 
-#define HUSBANDO_CVLC_SSH_COMMAND_START "systemd-run --user --scope --unit=mpv-session --setenv=DISPLAY=:0 nohup setsid mpv "
-#define HUSBANDO_CVLC_SSH_COMMAND_END   " --no-terminal > /dev/null 2>&1 &"
+#define HUSBANDO_CVLC_SSH_COMMAND_START "systemd-run --user --scope --unit=cvlc-session --setenv=DISPLAY=:0 nohup setsid cvlc -q "
+#define HUSBANDO_CVLC_SSH_COMMAND_END   " > /dev/null 2>&1 &"
 
 /*
  * @brief controls
 */
-#define HUSBANDO_CVLC_PLAYER_SHOW_TIME  "echo 'show-text ${playback-time}' | socat - "
-#define HUSBANDO_CVLC_PLAYER_SEEK_RIGHT "echo 'seek 5' | socat - "
-#define HUSBANDO_CVLC_PLAYER_SEEK_LEFT  "echo 'seek -5' | socat - "
-#define HUSBANDO_CVLC_PLAYER_PLAY       "echo 'play' | socat - "
-#define HUSBANDO_CVLC_PLAYER_PAUSE      "echo 'pause' | socat - "
-#define HUSBANDO_CVLC_PLAYER_PLAY_PAUSE "echo 'cycle pause' | socat - "
+#define HUSBANDO_CVLC_PLAYER_SEEK_RIGHT "playerctl position 5+"
+#define HUSBANDO_CVLC_PLAYER_SEEK_LEFT  "playerctl position 5-"
+#define HUSBANDO_CVLC_PLAYER_PLAY       "playerctl play"
+#define HUSBANDO_CVLC_PLAYER_PAUSE      "playerctl pause"
+#define HUSBANDO_CVLC_PLAYER_PLAY_PAUSE "playerctl play-pause"
 
 /**
  * @breif creates the core of husbando, will init a player as well as a ssh connect (if the config defaults to connect), also loads in notes

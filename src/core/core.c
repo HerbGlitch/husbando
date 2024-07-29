@@ -3,6 +3,7 @@
 #include "config.h"
 #include "provider/allanime/provider.h"
 #include "video/mpv/player.h"
+#include "video/cvlc/player.h"
 #include <stdlib.h>
 #include <arc/std/bool.h>
 #include <arc/std/string.h>
@@ -62,6 +63,8 @@ void HUSBANDO_Core_SetPlayer(HUSBANDO_Core *core, uint8_t playerId){
             break;
 
         case HUSBANDO_CORE_VIDEO_PLAYER_CVLC:
+            HUSBANDO_CorePlayer_DestroyCVLCPlayer(core->player);
+            core->player = NULL;
             break;
     }
 
@@ -78,6 +81,7 @@ void HUSBANDO_Core_SetPlayer(HUSBANDO_Core *core, uint8_t playerId){
             break;
 
         case HUSBANDO_CORE_VIDEO_PLAYER_CVLC:
+            HUSBANDO_CorePlayer_CreateCVLCPlayer(&(core->player));
             break;
     }
 }
