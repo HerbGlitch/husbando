@@ -63,7 +63,8 @@ int main(int32_t argc, char **argv){
 int main(int argc, char *argv[]){
     HUSBANDO_Config_Init("res/config/husbando.ini");
 
-    HUSBANDO_Core_Create(&husbando_core, HUSBANDO_CORE_VIDEO_PLAYER_MPV, HUSBANDO_CORE_VIDEO_PROVIDER_ALLANIME);
+    //HUSBANDO_Core_Create(&husbando_core, HUSBANDO_CORE_VIDEO_PLAYER_MPV, HUSBANDO_CORE_VIDEO_PROVIDER_ALLANIME);
+    HUSBANDO_Core_Create(&husbando_core, HUSBANDO_CORE_VIDEO_PLAYER_CVLC, HUSBANDO_CORE_VIDEO_PROVIDER_ALLANIME);
 
     HUSBANDO_TUIContainer *container;
     HUSBANDO_TUIContainer_Create(&container, (char *)husbando_config.Tui.containerName, NULL, 50);

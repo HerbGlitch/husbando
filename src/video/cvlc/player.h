@@ -20,11 +20,13 @@ extern "C" {
 /*
  * @brief controls
 */
-#define HUSBANDO_CVLC_PLAYER_SEEK_RIGHT "playerctl position 5+"
-#define HUSBANDO_CVLC_PLAYER_SEEK_LEFT  "playerctl position 5-"
-#define HUSBANDO_CVLC_PLAYER_PLAY       "playerctl play"
-#define HUSBANDO_CVLC_PLAYER_PAUSE      "playerctl pause"
-#define HUSBANDO_CVLC_PLAYER_PLAY_PAUSE "playerctl play-pause"
+#define HUSBANDO_CVLC_PLAYER_SEEK_RIGHT        "playerctl position 5+"
+#define HUSBANDO_CVLC_PLAYER_SEEK_LEFT         "playerctl position 5-"
+#define HUSBANDO_CVLC_PLAYER_PLAY              "playerctl play"
+#define HUSBANDO_CVLC_PLAYER_PAUSE             "playerctl pause"
+#define HUSBANDO_CVLC_PLAYER_PLAY_PAUSE        "playerctl play-pause"
+#define HUSBANDO_CVLC_PLAYER_GET_TIME_POSITION "playerctl position"
+#define HUSBANDO_CVLC_PLAYER_GET_TOTAL_TIME    "playerctl metadata vlc:time"
 
 /**
  * @breif creates the core of husbando, will init a player as well as a ssh connect (if the config defaults to connect), also loads in notes

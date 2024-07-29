@@ -1,5 +1,6 @@
 #include "player.h"
 
+#include "arc/std/string.h"
 #include "config.h"
 #include "core/core.h"
 #include "core/player.h"
@@ -88,13 +89,76 @@ void HUSBANDO_CVLC_SeekLeftFn(HUSBANDO_Core *core){
     system(command);
 }
 
+#define HUSBANDO_CVLC_PLAYER_GET_TIME_POSITION "playerctl position"
+#define HUSBANDO_CVLC_PLAYER_GET_TOTAL_TIME    "playerctl metadata vlc:time"
+
 ARC_Time HUSBANDO_CVLC_GetCurrentTimeFn(HUSBANDO_Core *core){
-    return (ARC_Time){ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    ARC_Time currentTime = (ARC_Time){ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    if(core->currentEpisode == NULL){
+        return currentTime;
+    }
+
+    char *command = HUSBANDO_CVLC_PLAYER_GET_TIME_POSITION;
+
+    if(core->ssh != NULL){
+        ARC_String *responseString = ARC_Ssh_ExecStrInNewSessionAndGetResponse(core->ssh, command);
+        if(responseString == NULL){
+            return currentTime;
+        }
+
+        uint32_t currentTimeInSeconds = (uint32_t)ARC_String_ToDouble(responseString);
+        if(currentTimeInSeconds != 0){
+            currentTime.seconds = currentTimeInSeconds % 60;
+            currentTime.minutes = (currentTimeInSeconds / 60) % 60;
+            currentTime.hour    = (currentTimeInSeconds / 60) / 60;
+        }
+
+        ARC_String_Destroy(responseString);
+        return currentTime;
+    }
+
+//    FILE *file = popen(command, "r");
+//    if(file == NULL){
+//        // error processing and return
+//        return (ARC_Time){ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+//    }
+//
+//    char buffer[256] ;
+//    while(fgets(buffer, 256, file) != NULL){
+//        // process a line
+//    }
+
+    //TODO: get time from local player
+    return currentTime;
 }
 
 ARC_Time HUSBANDO_CVLC_GetFullTimeFn(HUSBANDO_Core *core){
-    return (ARC_Time){ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-}
+    ARC_Time currentTime = (ARC_Time){ 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    if(core->currentEpisode == NULL){
+        return currentTime;
+    }
+
+    char *command = HUSBANDO_CVLC_PLAYER_GET_TOTAL_TIME;
+
+    if(core->ssh != NULL){
+        ARC_String *responseString = ARC_Ssh_ExecStrInNewSessionAndGetResponse(core->ssh, command);
+        if(responseString == NULL){
+            return currentTime;
+        }
+
+        uint32_t currentTimeInSeconds = (uint32_t)ARC_String_ToUint64_t(responseString);
+        if(currentTimeInSeconds != 0){
+            currentTime.seconds = currentTimeInSeconds % 60;
+            currentTime.minutes = (currentTimeInSeconds / 60) % 60;
+            currentTime.hour    = (currentTimeInSeconds / 60) / 60;
+        }
+
+        ARC_String_Destroy(responseString);
+        return currentTime;
+    }
+
+    //TODO: get time from local player
+    return (ARC_Time){ 0, 0, 0, 0, 0, 0, 0, 0, 0 };}
 
 void HUSBANDO_CVLC_SetCurrentTimeFn(HUSBANDO_Core *core, ARC_Time time){
 }
